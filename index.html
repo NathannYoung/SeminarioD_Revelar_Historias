@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Revelar Historias: Resignificando el archivo familiar</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+  <!-- Escenario de la Mesa (Vista Cenital) -->
+  <main class="desk-scene" id="desk">
+    
+    <!-- Textura y ambiente de la mesa -->
+    <div class="desk-surface">
+      <div class="desk-wood-texture-overlay"></div>
+    </div>
+    <div class="desk-vignette"></div>
+
+    <!-- Botón de alternar pantalla completa en la esquina superior izquierda -->
+    <button class="desk-fullscreen-btn" id="deskFullscreenBtn" title="Pantalla completa" aria-label="Pantalla completa">
+      <svg class="icon-expand" id="iconFullscreenExpand" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+      </svg>
+      <svg class="icon-compress" id="iconFullscreenCompress" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
+        <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
+      </svg>
+    </button>
+
+    <!-- Fondo atenuado durante el uso activo de la cámara física -->
+    <div class="camera-backdrop-dim" id="cameraBackdropDim"></div>
+
+    <!-- CÁMARA FOTOGRÁFICA INTERACTIVA 3D (Se alza y rota desde la mesa al centro) -->
+    <div class="camera-interactive-rig camera-locked" id="camera" role="button" tabindex="0" title="Cámara fotográfica 35mm">
+      <div class="camera-rig-3d" id="cameraRig3D">
+
+        <!-- CARA FRONTAL: CÁMARA CENITAL EN LA MESA -->
+        <div class="camera-rig-face camera-face-front" id="cameraFaceFront">
+          <svg class="camera-svg" viewBox="0 0 180 130" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <filter id="camera-shadow" x="-30%" y="-30%" width="170%" height="170%">
+                <feDropShadow dx="6" dy="12" stdDeviation="8" flood-color="rgba(15, 10, 6, 0.5)" />
+              </filter>
+              <linearGradient id="chrome-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#f2f5f8" />
+                <stop offset="25%" stop-color="#cfd5dd" />
+                <stop offset="50%" stop-color="#9ea5b0" />
+                <stop offset="75%" stop-color="#c8ced7" />
+                <stop offset="100%" stop-color="#707682" />
+              </linearGradient>
+              <linearGradient id="body-leather-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#22252a" />
+                <stop offset="50%" stop-color="#15171a" />
+                <stop offset="100%" stop-color="#0c0d0f" />
+              </linearGradient>
+              <linearGradient id="lens-barrel-metal" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#3d424b" />
+                <stop offset="50%" stop-color="#202328" />
+                <stop offset="100%" stop-color="#141619" />
+              </linearGradient>
+              <radialGradient id="lens-optics-deep" cx="44%" cy="38%" r="60%">
+                <stop offset="0%" stop-color="#1f527a" />
+                <stop offset="35%" stop-color="#12304d" />
+                <stop offset="65%" stop-color="#081b2e" />
+                <stop offset="85%" stop-color="#050e18" />
+                <stop offset="100%" stop-color="#020509" />
+              </radialGradient>
+              <linearGradient id="dial-knurl-light" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#808894" />
+                <stop offset="50%" stop-color="#d4dae2" />
+                <stop offset="100%" stop-color="#555c68" />
+              </linearGradient>
+            </defs>
+
+            <!-- Sombra cenital proyectada sobre la madera -->
+            <rect x="22" y="23" width="141" height="91" rx="10" fill="#000000" opacity="0.4" filter="url(#camera-shadow)" />
+
+            <!-- Rueda de luz izquierda estriada (Knurled Dial) -->
+            <g class="camera-light-dial-top" id="cameraLightDialTop" transform="translate(13, 44)">
+              <rect x="0" y="0" width="13" height="46" rx="3" fill="url(#dial-knurl-light)" stroke="#1a1d22" stroke-width="0.75" />
+              <rect x="2" y="2" width="9" height="42" rx="1.5" fill="#1b1d22" />
+              <!-- Estrías finas de precisión milimétrica -->
+              <line x1="2" y1="6" x2="11" y2="6" stroke="#9da6b2" stroke-width="0.8" />
+              <line x1="2" y1="11" x2="11" y2="11" stroke="#9da6b2" stroke-width="0.8" />
+              <line x1="2" y1="16" x2="11" y2="16" stroke="#9da6b2" stroke-width="0.8" />
+              <line x1="2" y1="21" x2="11" y2="21" stroke="#9da6b2" stroke-width="0.8" />
+              <line x1="2" y1="26" x2="11" y2="26" stroke="#9da6b2" stroke-width="0.8" />
+              <line x1="2" y1="31" x2="11" y2="31" stroke="#9da6b2" stroke-width="0.8" />
+              <line x1="2" y1="36" x2="11" y2="36" stroke="#9da6b2" stroke-width="0.8" />
+              <line x1="2" y1="41" x2="11" y2="41" stroke="#9da6b2" stroke-width="0.8" />
+            </g>
+
+            <!-- Chasis base exterior con bisel fino -->
+            <rect x="24" y="24" width="137" height="88" rx="8" ry="8" fill="#121316" />
+            <rect x="24.5" y="24.5" width="136" height="87" rx="7.5" fill="none" stroke="#484d56" stroke-width="0.8" />
+
+            <!-- Cuerpo central texturizado simil cuero vulcanizado -->
+            <rect x="26" y="38" width="133" height="72" rx="4" fill="url(#body-leather-grad)" />
+            <line x1="26" y1="38" x2="159" y2="38" stroke="#121417" stroke-width="0.75" />
+            <line x1="26" y1="39" x2="159" y2="39" stroke="#ffffff" stroke-width="0.4" opacity="0.15" />
+
+            <!-- Prisma superior réflex estilizado -->
+            <polygon points="76,24 120,24 112,12 84,12" fill="url(#chrome-grad)" stroke="#32363d" stroke-width="0.75" />
+            <polygon points="79,24 117,24 110,14 86,14" fill="#181a1e" />
+            <!-- Emblema de precisión rojo (Red Dot estilizado) -->
+            <circle cx="98" cy="19" r="2.2" fill="#e53935" stroke="#b71c1c" stroke-width="0.4" />
+            <circle cx="97.4" cy="18.4" r="0.7" fill="#ffffff" opacity="0.65" />
+
+            <!-- Placa superior de metal pulido / cromo cepillado -->
+            <rect x="25" y="24" width="135" height="14" rx="4" fill="url(#chrome-grad)" stroke="#2d3036" stroke-width="0.75" />
+            <line x1="26" y1="37" x2="159" y2="37" stroke="#ffffff" stroke-width="0.5" opacity="0.5" />
+            
+            <!-- Tornillos microscópicos de ensamblaje en placa superior -->
+            <circle cx="30" cy="27" r="1.1" fill="#444a53" stroke="#26292e" stroke-width="0.3" />
+            <circle cx="155" cy="27" r="1.1" fill="#444a53" stroke="#26292e" stroke-width="0.3" />
+
+            <!-- Diales mecánicos superiores de precisión -->
+            <g transform="translate(0, 0)">
+              <!-- Dial de velocidades izquierdo con bisel estriado -->
+              <circle cx="48" cy="29" r="7.5" fill="#1c1e22" stroke="#4b5059" stroke-width="0.75" />
+              <circle cx="48" cy="29" r="6" fill="url(#chrome-grad)" stroke="#22252a" stroke-width="0.5" />
+              <circle cx="48" cy="29" r="2.2" fill="#16181b" />
+              <line x1="48" y1="23.5" x2="48" y2="25.5" stroke="#d43f3a" stroke-width="0.6" />
+
+              <!-- Botón disparador metálico con rosca interior -->
+              <circle cx="70" cy="28" r="6" fill="url(#chrome-grad)" stroke="#2a2d33" stroke-width="0.75" />
+              <circle cx="70" cy="28" r="4.2" fill="#e4e8ee" stroke="#363a42" stroke-width="0.5" />
+              <circle cx="70" cy="28" r="1.6" fill="#1b1c1e" stroke="#686f7c" stroke-width="0.4" />
+
+              <!-- Palanca de arrastre de película compacta y estilizada -->
+              <rect x="125" y="21" width="17" height="5" rx="1.5" fill="url(#chrome-grad)" stroke="#32363d" stroke-width="0.65" transform="rotate(-15 125 21)" />
+              <circle cx="140" cy="28" r="4.5" fill="url(#chrome-grad)" stroke="#41464f" stroke-width="0.65" />
+              <circle cx="140" cy="28" r="1.5" fill="#1c1d20" />
+            </g>
+
+            <!-- Sombra propia cilíndrica bajo el cañón del objetivo -->
+            <ellipse cx="101" cy="73" rx="35" ry="34" fill="#000000" opacity="0.55" />
+
+            <!-- OBJETIVO / LENTE 35MM CON ANILLOS CILÍNDRICOS DE PRECISIÓN -->
+            <!-- Corona exterior de montura con bisel fino -->
+            <circle cx="98" cy="70" r="34" fill="url(#lens-barrel-metal)" stroke="#454b56" stroke-width="0.9" />
+            <circle cx="98" cy="70" r="33.2" fill="none" stroke="#ffffff" stroke-width="0.4" opacity="0.25" />
+
+            <!-- Anillo estriado de enfoque con textura micrométrica -->
+            <circle cx="98" cy="70" r="30.5" fill="#181a1e" stroke="url(#chrome-grad)" stroke-width="0.8" />
+            <circle cx="98" cy="70" r="27.5" fill="#101114" stroke="#2b2f37" stroke-width="0.65" />
+
+            <!-- Bisel interior cromado de alto brillo -->
+            <circle cx="98" cy="70" r="24.8" fill="url(#chrome-grad)" stroke="#1a1c20" stroke-width="0.75" />
+            <circle cx="98" cy="70" r="23.5" fill="#07080a" />
+
+            <!-- Lente Óptico (Cristal azul profundo multicapa antireflejo) -->
+            <g id="lensOpticsOpen" class="lens-optics-layer">
+              <circle cx="98" cy="70" r="23" fill="url(#lens-optics-deep)" />
+              <!-- Destellos y reflejos ópticos con tonalidades verde esmeralda y violeta cian -->
+              <ellipse cx="91" cy="62" rx="8" ry="4" fill="#64b5f6" opacity="0.5" transform="rotate(-32 91 62)" />
+              <ellipse cx="106" cy="78" rx="4.5" ry="2.2" fill="#81c784" opacity="0.4" transform="rotate(-32 106 78)" />
+              <circle cx="98" cy="70" r="11" fill="none" stroke="#ba68c8" stroke-width="0.6" opacity="0.35" />
+              <circle cx="98" cy="70" r="18" fill="none" stroke="#4fc3f7" stroke-width="0.4" opacity="0.25" />
+            </g>
+
+            <!-- Aspas mecánicas del diafragma (Iris cerrado por defecto) -->
+            <g id="lensIrisClosed" class="lens-iris-closed">
+              <circle cx="98" cy="70" r="23" fill="#121417" stroke="#25292f" stroke-width="0.6" />
+              <path d="M 98 49 L 116 66 L 103 77 Z" fill="#202327" stroke="#0a0b0d" stroke-width="0.5" />
+              <path d="M 119 70 L 102 88 L 90 76 Z" fill="#181a1e" stroke="#0a0b0d" stroke-width="0.5" />
+              <path d="M 98 91 L 80 74 L 93 63 Z" fill="#202327" stroke="#0a0b0d" stroke-width="0.5" />
+              <path d="M 77 70 L 94 52 L 106 64 Z" fill="#181a1e" stroke="#0a0b0d" stroke-width="0.5" />
+              <circle cx="98" cy="70" r="4.5" fill="#08090b" stroke="#16181b" stroke-width="0.5" />
+            </g>
+
+            <!-- Inscripciones microscópicas grabadas en el anillo frontal -->
+            <circle cx="98" cy="70" r="21.5" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="0.6" stroke-dasharray="2 5" />
+
+            <!-- Visor óptico telemétrico frontal con cristal azulado -->
+            <rect x="135" y="41" width="11" height="7.5" rx="1.5" fill="#0a0b0e" stroke="url(#chrome-grad)" stroke-width="0.65" />
+            <rect x="136.5" y="42.5" width="8" height="4.5" rx="1" fill="#182c3f" />
+
+            <!-- LED Indicador de estado estilizado -->
+            <circle cx="38" cy="50" r="3.2" class="camera-led-indicator led-off" id="cameraLed" stroke="#222" stroke-width="0.5" />
+          </svg>
+        </div>
+
+        <!-- CARA TRASERA: PANTALLA LCD Y CONTROLES FÍSICOS CON BOTÓN AL COSTADO -->
+        <div class="camera-rig-face camera-face-rear" id="cameraFaceRear">
+          <div class="camera-chassis" id="cameraChassis">
+            
+            <!-- Placa superior metálica con visor óptico y marca centrada -->
+            <div class="chassis-topbar">
+              <div class="optical-viewfinder-box pulse-luminous" id="opticalViewfinderBox" role="button" tabindex="0" title="Mirar por el visor óptico (Pantalla Completa)">
+                <div class="viewfinder-window-glass"></div>
+              </div>
+              <div class="chassis-brand-mark">CHRONO LAPSUS 35 &bull; REFLEX</div>
+            </div>
+
+            <!-- Cuerpo central con pantalla LCD y controles laterales a la derecha -->
+            <div class="chassis-main-body">
+              
+              <!-- Pantalla LCD Central -->
+              <div class="rear-screen-bezel">
+                <div class="rear-screen-viewport" id="rearScreenViewport">
+                  <div class="screen-landscape-layer" id="screenLandscapeLayer"></div>
+                  <div class="screen-cutouts-layer" id="screenCutoutsLayer"></div>
+                  <div class="screen-overprint-layer" id="screenOverprintLayer">
+                    <div class="overprint-canvas-track" id="overprintCanvasTrack"></div>
+                  </div>
+                  <div class="screen-viewfinder-grid" aria-hidden="true">
+                    <div class="grid-cross-center"></div>
+                    <div class="grid-crop-corner crop-tl"></div>
+                    <div class="grid-crop-corner crop-tr"></div>
+                    <div class="grid-crop-corner crop-bl"></div>
+                    <div class="grid-crop-corner crop-br"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- LADO DERECHO: PANEL DE CONTROL FÍSICO CON DISPARADOR SUPERIOR Y RUEDA DE EXPOSICIÓN -->
+              <div class="chassis-side-column">
+                
+                <!-- Botón disparador lateral (situado más arriba) -->
+                <div class="chassis-side-shutter-section">
+                  <button class="chassis-shutter-button side-shutter-button" id="rearShutterBtn" title="Disparar fotografía">
+                    <span class="shutter-core-dot"></span>
+                  </button>
+                  <span class="side-shutter-label">DISPARAR</span>
+                </div>
+
+                <!-- Rueda de Exposición con flechas arriba/abajo y leyenda "EXPOSICIÓN" en gris -->
+                <div class="chassis-exposure-section">
+                  <div class="exposure-legend">
+                    <span class="exposure-arrow" id="exposureArrowUp" title="Aumentar desplazamiento de luz">&uarr;</span>
+                    <span class="exposure-text">EXPOSICIÓN</span>
+                    <span class="exposure-arrow" id="exposureArrowDown" title="Disminuir desplazamiento de luz">&darr;</span>
+                  </div>
+                  <div class="physical-light-wheel" id="physicalLightWheel" role="slider" aria-label="Rueda de exposición para desplazar la sobreimpresión" tabindex="0">
+                    <div class="wheel-cylinder-barrel" id="wheelCylinderBarrel">
+                      <div class="wheel-rib"></div>
+                      <div class="wheel-rib"></div>
+                      <div class="wheel-rib"></div>
+                      <div class="wheel-rib"></div>
+                      <div class="wheel-rib"></div>
+                      <div class="wheel-rib"></div>
+                      <div class="wheel-rib"></div>
+                      <div class="wheel-rib"></div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+            </div> <!-- fin .chassis-main-body -->
+
+          </div> <!-- fin .camera-chassis -->
+        </div>
+
+      </div> <!-- fin .camera-rig-3d -->
+    </div> <!-- fin .camera-interactive-rig -->
+
+    <!-- LIBRO INTERACTIVO 3 (TOMO III - Físico 3D en la base de la pila) -->
+    <div class="active-book-wrapper state-stacked tomo-3-book" id="tomo3BookWrapper">
+      <div class="book-3d" id="tomo3Book3D">
+        
+        <!-- CARA 1: PORTADA TOMO III -->
+        <div class="book-face book-front-cover tomo-3-cover" id="tomo3FrontCover" role="button" tabindex="0" aria-label="Abrir libro Tomo III">
+          <div class="book-cover-texture-layer"></div>
+          <div class="cover-emboss-border">
+            <div class="cover-top-volume">
+              <span class="volume-badge">TOMO III</span>
+            </div>
+            
+            <div class="cover-main-info">
+              <h1 class="cover-title">Memorias de Re-Uniones.</h1>
+              <p class="cover-subtitle">Registros de momentos que viví y no inmortalicé.</p>
+            </div>
+
+            <div class="cover-bottom-space"></div>
+          </div>
+        </div>
+
+        <!-- CARA 2: INTERIOR DEL TOMO III (ÁLBUM ABIERTO EN 2 PÁGINAS) -->
+        <div class="book-face book-interior tomo-3-interior" id="tomo3Interior">
+          <div class="book-spread-container" id="tomo3SpreadContainer">
+            
+            <!-- PÁGINA IZQUIERDA BASE -->
+            <div class="spread-half spread-left-half" id="tomo3LeftPageBase">
+              <div class="page-paper" id="tomo3LeftPaperContent"></div>
+              <div class="spread-cover-flap flap-front book-front-cover tomo-3-cover">
+                <div class="book-cover-texture-layer"></div>
+                <div class="cover-emboss-border">
+                  <div class="cover-top-volume">
+                    <span class="volume-badge">TOMO III</span>
+                  </div>
+                  <div class="cover-main-info">
+                    <h1 class="cover-title">Memorias de Re-Uniones.</h1>
+                    <p class="cover-subtitle">Registros de momentos que viví y no inmortalicé.</p>
+                  </div>
+                  <div class="cover-bottom-space"></div>
+                </div>
+              </div>
+              <div class="spine-fold-shadow fold-left"></div>
+            </div>
+
+            <!-- LOMO CENTRAL -->
+            <div class="book-central-gutter" aria-hidden="true">
+              <div class="central-crease-line"></div>
+            </div>
+
+            <!-- PÁGINA DERECHA BASE -->
+            <div class="spread-half spread-right-half" id="tomo3RightPageBase">
+              <div class="page-paper" id="tomo3RightPaperContent"></div>
+              <div class="spine-fold-shadow fold-right"></div>
+            </div>
+
+            <!-- SOMBRA PROYECTADA BAJO LA HOJA MÓVIL -->
+            <div class="under-leaf-shadow" id="tomo3UnderLeafShadow" aria-hidden="true"></div>
+
+            <!-- HOJA MÓVIL 3D -->
+            <div class="flipping-leaf" id="tomo3FlippingLeaf">
+              <div class="leaf-face leaf-front" id="tomo3LeafFront"></div>
+              <div class="leaf-face leaf-back" id="tomo3LeafBack"></div>
+              <div class="leaf-curl-highlight" id="tomo3LeafHighlight"></div>
+              <div class="leaf-shadow" id="tomo3LeafShadow"></div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- CARA 3: CONTRATAPA POSTERIOR TOMO III -->
+        <div class="book-face book-back-cover tomo-3-back-cover" id="tomo3BackCover">
+          <div class="book-cover-texture-layer mirrored"></div>
+          <div class="back-texture"></div>
+          <div class="back-content">
+            <div class="back-stamp">
+              <div class="back-stamp-right">
+                <span class="stamp-series">Revelar Historias: Resignificando el archivo familiar.</span>
+                <span class="stamp-code">EXP. 3.</span>
+              </div>
+            </div>
+
+            <div class="back-manifesto">
+              <h3 class="manifesto-title">Archivo de Creación.</h3>
+              <div class="manifesto-divider"></div>
+              
+              <blockquote class="manifesto-quote">
+                "La memoria siempre está hecha de lagunas. Al unir los fragmentos, inventamos la presencia que el tiempo desvaneció."
+              </blockquote>
+
+              <div class="back-barcode-wrapper">
+                <div class="barcode-lines"></div>
+                <span class="barcode-number">ISBN 978-987-00-1104-8</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- LIBRO INTERACTIVO 2 (TOMO II - En la pila bajo el Tomo I) -->
+    <div class="active-book-wrapper state-stacked tomo-2-book" id="tomo2BookWrapper">
+      <div class="book-3d" id="tomo2Book3D">
+        
+        <!-- CARA 1: PORTADA TOMO II (Misma estética: TOMO 2, Título y Subtítulo) -->
+        <div class="book-face book-front-cover tomo-2-cover" id="tomo2FrontCover" role="button" tabindex="0" aria-label="Abrir libro Tomo II">
+          <div class="book-cover-texture-layer"></div>
+          <div class="cover-emboss-border">
+            <div class="cover-top-volume">
+              <span class="volume-badge">TOMO II</span>
+            </div>
+            
+            <div class="cover-main-info">
+              <h1 class="cover-title">Memorias ancladas a personas.</h1>
+              <p class="cover-subtitle">Registro de mi círculo familiar cercano.</p>
+            </div>
+
+            <div class="cover-bottom-space"></div>
+          </div>
+        </div>
+
+        <!-- CARA 2: INTERIOR DEL TOMO II (ÁLBUM ABIERTO EN 2 PÁGINAS) -->
+        <div class="book-face book-interior tomo-2-interior" id="tomo2Interior">
+          <div class="book-spread-container" id="tomo2SpreadContainer">
+            
+            <!-- PÁGINA IZQUIERDA BASE -->
+            <div class="spread-half spread-left-half" id="tomo2LeftPageBase">
+              <div class="page-paper" id="tomo2LeftPaperContent">
+                <!-- Spread 0: Vacío sin numeración. Spreads 1+: 3 o 4 recortes -->
+              </div>
+              <div class="spread-cover-flap flap-front book-front-cover tomo-2-cover">
+                <div class="book-cover-texture-layer"></div>
+                <div class="cover-emboss-border">
+                  <div class="cover-top-volume">
+                    <span class="volume-badge">TOMO II</span>
+                  </div>
+                  <div class="cover-main-info">
+                    <h1 class="cover-title">Memorias ancladas a personas.</h1>
+                    <p class="cover-subtitle">Registro de mi círculo familiar cercano.</p>
+                  </div>
+                  <div class="cover-bottom-space"></div>
+                </div>
+              </div>
+              <div class="spine-fold-shadow fold-left"></div>
+            </div>
+
+            <!-- LOMO CENTRAL -->
+            <div class="book-central-gutter" aria-hidden="true">
+              <div class="central-crease-line"></div>
+            </div>
+
+            <!-- PÁGINA DERECHA BASE -->
+            <div class="spread-half spread-right-half" id="tomo2RightPageBase">
+              <div class="page-paper" id="tomo2RightPaperContent">
+                <!-- Spread 0: Portadilla y Cita de Roland Barthes. Spreads 1+: 3 o 4 recortes -->
+              </div>
+              <div class="spread-cover-flap flap-back book-back-cover tomo-2-back-cover">
+                <div class="book-cover-texture-layer mirrored"></div>
+                <div class="back-texture"></div>
+                <div class="back-content">
+                  <div class="back-stamp">
+                    <div class="back-stamp-right">
+                      <span class="stamp-series">Revelar Historias: Resignificando el archivo familiar.</span>
+                      <span class="stamp-code">EXP. 2.</span>
+                    </div>
+                  </div>
+                  <div class="back-manifesto">
+                    <blockquote class="manifesto-quote">
+                      "La presencia de los seres queridos en el encuadre suspende el olvido y convierte el paisaje en testigo de nuestra historia común."
+                    </blockquote>
+                    <div class="back-barcode-wrapper">
+                      <div class="barcode-lines"></div>
+                      <span class="barcode-number">ISBN 2310199117111992</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="spine-fold-shadow fold-right"></div>
+            </div>
+
+            <!-- SOMBRA PROYECTADA BAJO LA HOJA MÓVIL -->
+            <div class="under-leaf-shadow" id="tomo2UnderLeafShadow" aria-hidden="true"></div>
+
+            <!-- HOJA MÓVIL 3D -->
+            <div class="flipping-leaf" id="tomo2FlippingLeaf">
+              <div class="leaf-face leaf-front" id="tomo2LeafFront"></div>
+              <div class="leaf-face leaf-back" id="tomo2LeafBack"></div>
+              <div class="leaf-curl-highlight" id="tomo2LeafHighlight"></div>
+              <div class="leaf-shadow" id="tomo2LeafShadow"></div>
+            </div>
+
+          </div> <!-- fin #tomo2SpreadContainer -->
+
+        </div>
+ 
+        <!-- CARA 3: CONTRATAPA POSTERIOR TOMO II (Boca abajo a la izquierda) -->
+        <div class="book-face book-back-cover tomo-2-back-cover" id="tomo2BackCover">
+          <div class="book-cover-texture-layer mirrored"></div>
+          <div class="back-texture"></div>
+          <div class="back-content">
+            <div class="back-stamp">
+              <div class="back-stamp-right">
+                <span class="stamp-series">Revelar Historias: Resignificando el archivo familiar.</span>
+                <span class="stamp-code">EXP. 2.</span>
+              </div>
+            </div>
+
+            <div class="back-manifesto">
+              <blockquote class="manifesto-quote">
+                "La presencia de los seres queridos en el encuadre suspende el olvido y convierte el paisaje en testigo de nuestra historia común."
+              </blockquote>
+
+              <div class="back-barcode-wrapper">
+                <div class="barcode-lines"></div>
+                <span class="barcode-number">ISBN 2310199117111992</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- LIBRO INTERACTIVO 1 (TOMO I - Superior en la pila) -->
+    <div class="active-book-wrapper state-stacked tomo-1-book pulse-glow" id="tomo1BookWrapper">
+      
+      <!-- Contenedor 3D del libro -->
+      <div class="book-3d" id="tomo1Book3D">
+        
+        <!-- CARA 1: PORTADA SUPERIOR (Tapa limpia: TOMO I, Título y Subtítulo) -->
+        <div class="book-face book-front-cover" id="bookFrontCover" role="button" tabindex="0" aria-label="Abrir libro Tomo I">
+          <div class="book-cover-texture-layer"></div>
+          <div class="cover-emboss-border">
+            <div class="cover-top-volume">
+              <span class="volume-badge">TOMO I</span>
+            </div>
+            
+            <div class="cover-main-info">
+              <h1 class="cover-title">Memorias ancladas al espacio.</h1>
+              <p class="cover-subtitle">Registros de paisajes donde buscaba algo.</p>
+            </div>
+
+            <div class="cover-bottom-space">
+              <!-- Espacio limpio en la tapa sin botones ni iconos -->
+            </div>
+          </div>
+        </div>
+
+        <!-- CARA 2: INTERIOR DEL LIBRO (ÁLBUM ABIERTO EN 2 PÁGINAS CON VUELTA DE PÁGINA 3D) -->
+        <div class="book-face book-interior" id="bookInterior">
+          
+          <!-- Escenario 3D de las páginas del libro -->
+          <div class="book-spread-container" id="bookSpreadContainer">
+            
+            <!-- PÁGINA IZQUIERDA BASE -->
+            <div class="spread-half spread-left-half" id="leftPageBase">
+              <div class="page-paper" id="leftPaperContent">
+                <!-- Contenido inyectado dinámicamente:
+                     Spread 0: Vacío sin numeración
+                     Spread 1..11: Entrada 01:, título, texto y número a la izquierda -->
+              </div>
+              <div class="spread-cover-flap flap-front book-front-cover tomo-1-cover">
+                <div class="book-cover-texture-layer"></div>
+                <div class="cover-emboss-border">
+                  <div class="cover-top-volume">
+                    <span class="volume-badge">TOMO I</span>
+                  </div>
+                  <div class="cover-main-info">
+                    <h1 class="cover-title">Memorias ancladas al espacio.</h1>
+                    <p class="cover-subtitle">Registros de paisajes donde buscaba algo.</p>
+                  </div>
+                  <div class="cover-bottom-space"></div>
+                </div>
+              </div>
+              <div class="spine-fold-shadow fold-left"></div>
+            </div>
+
+            <!-- LOMO CENTRAL -->
+            <div class="book-central-gutter" aria-hidden="true">
+              <div class="central-crease-line"></div>
+            </div>
+
+            <!-- PÁGINA DERECHA BASE -->
+            <div class="spread-half spread-right-half" id="rightPageBase">
+              <div class="page-paper" id="rightPaperContent">
+                <!-- Contenido inyectado dinámicamente:
+                     Spread 0: Portadilla con título, subtítulo y cita de Sabato
+                     Spread 1..11: Fotografía horizontal 16:9 interactiva y número a la derecha -->
+              </div>
+              <div class="spread-cover-flap flap-back book-back-cover">
+                <div class="book-cover-texture-layer mirrored"></div>
+                <div class="back-texture"></div>
+                <div class="back-content">
+                  <div class="back-stamp">
+                    <div class="back-stamp-right">
+                      <span class="stamp-series">Revelar Historias: Resignificando el archivo familiar.</span>
+                      <span class="stamp-code">EXP. 1.</span>
+                    </div>
+                  </div>
+                  <div class="back-manifesto">
+                    <blockquote class="manifesto-quote">
+                      "Toda imagen detenida guarda el silencio de lo que estaba a punto de suceder. 
+                      Al elegir una de ellas, el observador no solo rescata un encuadre: 
+                      decide qué parte de la historia merece permanecer abierta a la memoria."
+                    </blockquote>
+                    <div class="back-barcode-wrapper">
+                      <div class="barcode-lines"></div>
+                      <span class="barcode-number">ISBN 1405196708031970</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="spine-fold-shadow fold-right"></div>
+            </div>
+
+            <!-- SOMBRA PROYECTADA BAJO LA HOJA MÓVIL -->
+            <div class="under-leaf-shadow" id="underLeafShadow" aria-hidden="true"></div>
+
+            <!-- HOJA MÓVIL 3D (Para la animación física de dar vuelta la página) -->
+            <div class="flipping-leaf" id="flippingLeaf">
+              <div class="leaf-face leaf-front" id="leafFront">
+                <!-- Contenido frontal de la página que se levanta -->
+              </div>
+              <div class="leaf-face leaf-back" id="leafBack">
+                <!-- Contenido posterior de la página que da la vuelta -->
+              </div>
+              <div class="leaf-curl-highlight" id="leafHighlight"></div>
+              <div class="leaf-shadow" id="leafShadow"></div>
+            </div>
+
+          </div> <!-- fin .book-spread-container -->
+
+        </div> <!-- fin .book-interior -->
+
+        <!-- CARA 3: CONTRATAPA POSTERIOR (Boca abajo a la izquierda) -->
+        <div class="book-face book-back-cover" id="bookBackCover">
+          <div class="book-cover-texture-layer mirrored"></div>
+          <div class="back-texture"></div>
+          <div class="back-content">
+            <div class="back-stamp">
+              <div class="back-stamp-right">
+                <span class="stamp-series">Revelar Historias: Resignificando el archivo familiar.</span>
+                <span class="stamp-code">EXP. 1.</span>
+              </div>
+            </div>
+
+            <div class="back-manifesto">
+              <blockquote class="manifesto-quote" id="backBookQuote">
+                "Toda imagen detenida guarda el silencio de lo que estaba a punto de suceder. 
+                Al elegir una de ellas, el observador no solo rescata un encuadre: 
+                decide qué parte de la historia merece permanecer abierta a la memoria."
+              </blockquote>
+
+              <div class="back-barcode-wrapper">
+                <div class="barcode-lines"></div>
+                <span class="barcode-number">ISBN 1405196708031970</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div> <!-- fin .book-3d -->
+    </div> <!-- fin #tomo1BookWrapper -->
+
+    <!-- FOTOGRAFÍA DESPEGADA EN EL CENTRO DE LA MESA (16:9 limpia, sólo con marco) -->
+    <div class="detached-photo-stage" id="detachedPhotoStage">
+      <div class="detached-photo-card" id="detachedPhotoCard" role="button" tabindex="0" title="Toca la foto para reabrir el libro de paisajes">
+        <div class="detached-photo-media" id="detachedPhotoMedia">
+          <div class="detached-photo-landscape" id="detachedPhotoLandscape"></div>
+              <div class="detached-photo-cutouts" id="detachedPhotoCutouts"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VISOR EN PANTALLA COMPLETA (Al tocar el visor de la cámara) -->
+    <div class="viewfinder-fullscreen-overlay" id="viewfinderFullscreen" aria-hidden="true">
+      <div class="viewfinder-fullscreen-viewport" id="fullscreenViewport">
+        <div class="screen-landscape-layer" id="fsLandscapeLayer"></div>
+        <div class="screen-cutouts-layer" id="fsCutoutsLayer"></div>
+        <div class="screen-overprint-layer" id="fsOverprintLayer">
+          <div class="overprint-canvas-track" id="fsOverprintTrack"></div>
+        </div>
+        <div class="screen-viewfinder-grid" aria-hidden="true">
+          <div class="grid-cross-center"></div>
+          <div class="grid-crop-corner crop-tl"></div>
+          <div class="grid-crop-corner crop-tr"></div>
+          <div class="grid-crop-corner crop-bl"></div>
+          <div class="grid-crop-corner crop-br"></div>
+        </div>
+      </div>
+      <div class="viewfinder-fs-controls">
+        <div class="fs-shutter-wrap">
+          <button class="chassis-shutter-button fs-shutter-btn" id="fsShutterBtn" title="Disparar fotografía">
+            <span class="shutter-core-dot"></span>
+          </button>
+          <span class="side-shutter-label">DISPARAR</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOTOGRAFÍA FÍSICA COMPUESTA QUE CAE SOBRE LA MESA TRAS EL DISPARO -->
+    <div class="dropped-photo-stage" id="droppedPhotoStage">
+      <div class="dropped-photo-card" id="droppedPhotoCard" role="button" tabindex="0" title="Toca para girar la fotografía y registrar autor/x y título">
+        <div class="dropped-photo-flipper" id="droppedPhotoFlipper">
+          
+          <!-- ANVERSO: FOTOGRAFÍA 35MM RECIÉN TOMADA -->
+          <div class="photo-card-face photo-card-front" id="droppedPhotoFront">
+            <div class="photo-card-media-wrap">
+              <img id="droppedPhotoImg" src="" alt="Fotografía compuesta revelada" />
+            </div>
+          </div>
+
+          <!-- REVERSO: FICHA EDITORIAL PARA TÍTULO Y AUTORX -->
+          <div class="photo-card-face photo-card-back" id="droppedPhotoBack">
+            <div class="photo-card-back-texture"></div>
+            <div class="photo-card-back-content">
+              <div class="card-back-header">
+                <span class="card-back-stamp">Ficha de memoria</span>
+                <span class="card-back-id" id="droppedPhotoIdLabel">Nuevo registro</span>
+              </div>
+              
+              <div class="card-back-form">
+                <div class="card-input-group">
+                  <label class="card-field-label" for="photoTitleInput">Título:</label>
+                  <input type="text" id="photoTitleInput" class="card-text-input" placeholder="Escribe aquí..." maxlength="45" autocomplete="off" />
+                </div>
+
+                <div class="card-input-group">
+                  <label class="card-field-label" for="photoAuthorInput">Autorx:</label>
+                  <input type="text" id="photoAuthorInput" class="card-text-input" placeholder="Escribe aquí..." maxlength="35" autocomplete="off" />
+                </div>
+
+                <div class="card-input-group">
+                  <label class="card-field-label" for="photoObservationsInput">Observaciones:</label>
+                  <input type="text" id="photoObservationsInput" class="card-text-input" placeholder="Escribe aquí..." maxlength="100" autocomplete="off" />
+                </div>
+              </div>
+
+              <div class="card-back-footer">
+                <button type="button" class="save-to-tomo3-btn check-icon-btn" id="saveToTomo3Btn" title="Guardar en Tomo 3" aria-label="Guardar en Tomo 3">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Flash óptico de obturación de la cámara -->
+    <div class="camera-flash-overlay" id="cameraFlashOverlay"></div>
+
+  </main>
+
+  <!-- PANTALLA DE ORIENTACIÓN: OBLIGATORIA PARA CELULARES Y TABLETS EN VERTICAL -->
+  <aside class="orientation-gate-overlay" id="orientationGateOverlay" aria-modal="true" role="dialog" aria-label="Indicación de giro de pantalla">
+    <div class="orientation-gate-card">
+      
+      <!-- ESTADO 1: TELÉFONO EN VERTICAL (INDICACIÓN DE GIRAR) -->
+      <div class="gate-state-portrait" id="gateStatePortrait">
+        <div class="phone-rotate-anim-box">
+          <div class="phone-rotate-device">
+            <div class="phone-device-lens"></div>
+            <div class="phone-device-screen">
+              <div class="phone-screen-artwork">
+                <span class="artwork-line"></span>
+                <span class="artwork-dot"></span>
+              </div>
+            </div>
+            <div class="phone-device-bar"></div>
+          </div>
+          <div class="phone-rotate-arrow">
+            <svg viewBox="0 0 50 50" width="54" height="54" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M 40 20 A 18 18 0 1 0 20 40" stroke-linecap="round"/>
+              <polyline points="26,34 20,40 26,46" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+
+        <span class="gate-tag">VISTA HORIZONTAL REQUERIDA</span>
+        <h2 class="gate-title">Gira tu celular</h2>
+        <p class="gate-desc">
+          Esta experiencia cenital está diseñada exclusivamente para explorarse a lo ancho de la pantalla.
+        </p>
+        <span class="gate-subhint">Coloca el teléfono de costado para continuar</span>
+      </div>
+
+      <!-- ESTADO 2: TELÉFONO GIRADO A HORIZONTAL (LISTO PARA PANTALLA COMPLETA) -->
+      <div class="gate-state-ready" id="gateStateReady" style="display: none;">
+        <div class="gate-success-icon">
+          <svg viewBox="0 0 60 40" width="60" height="40" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="56" height="36" rx="6" stroke="#d4a373" stroke-width="2.2"/>
+            <circle cx="52" cy="20" r="2" fill="#d4a373"/>
+            <path d="M 22 20 L 27 25 L 38 14" stroke="#3fb950" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+
+        <span class="gate-tag-ready">DISPOSITIVO EN POSICIÓN</span>
+        <h2 class="gate-title">Listo para comenzar</h2>
+        <p class="gate-desc">
+          Toca el botón para ingresar a la mesa en pantalla completa.
+        </p>
+
+        <button class="gate-start-btn" id="gateStartBtn">
+          <span>Comenzar experiencia</span>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- Módulos de interacción por libro y cámara -->
+  <script src="./js/tomo1.js"></script>
+  <script src="./js/tomo2.js"></script>
+  <script src="./js/camara.js"></script>
+  <script src="./js/tomo3.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,4075 @@
+/* ==========================================================================
+   ESTILOS GENERALES Y VARIABLES DE LA MESA CENITAL
+   ========================================================================== */
+
+:root {
+  /* Paleta de la mesa de madera (más clara y cálida) */
+  --desk-wood-base: #5a483a;
+  --desk-wood-light: #7e6754;
+  --desk-wood-dark: #3a2e24;
+  --desk-accent: #e5b98a;
+  
+  /* Texturas de libros (gama de violetas armónicos y detalles dorados) */
+  --book-cover-bg: #24132e;
+  --book-cover-accent: #dfb76c;
+  --book-paper-bg: #faf7f2;
+  --book-paper-crease: #e8e2d4;
+  --book-text-color: #2b2723;
+  --book-back-bg: #22122b;
+  --book-back-text: #eceae4;
+
+  /* Sombras cenitales */
+  --shadow-flat: 0 10px 25px rgba(0, 0, 0, 0.45);
+  --shadow-elevated: 0 32px 70px rgba(0, 0, 0, 0.75), 0 10px 25px rgba(0, 0, 0, 0.35);
+  --shadow-book-stack: 6px 9px 22px rgba(0, 0, 0, 0.6), -3px 3px 12px rgba(0, 0, 0, 0.4);
+
+  /* Dimensiones del libro cerrado (proporcional al libro desplegado: 1 página de ancho, misma altura) */
+  --book-open-w: 860px;
+  --book-open-h: 510px;
+  --book-w: calc(var(--book-open-w) / 2);
+  --book-h: var(--book-open-h);
+  
+  /* Desplazamiento de la pila derecha y posición cerrada izquierda */
+  --desk-offset-x: 35.5vw;
+  --desk-offset-y: 65px;
+
+  --transition-smooth: all 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+  --transition-fast: all 0.22s ease-out;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: var(--desk-wood-dark);
+  color: #fff;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ==========================================================================
+   ESCENARIO DE LA MESA (VISTA CENITAL)
+   ========================================================================== */
+
+.desk-scene {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  perspective: 2000px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Superficie de madera cenital (tonalidad más clara) */
+.desk-surface {
+  position: absolute;
+  inset: 0;
+  background-color: #524235;
+  background-image: 
+    radial-gradient(ellipse at 50% 36%, rgba(182, 142, 106, 0.48) 0%, rgba(56, 42, 32, 0.88) 100%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.022) 0px,
+      rgba(255, 255, 255, 0.022) 1px,
+      transparent 1px,
+      transparent 85px
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.03) 0%,
+      rgba(0, 0, 0, 0.2) 100%
+    );
+  z-index: 1;
+}
+
+/* Textura real de madera aplicada a la mesa con 25% de opacidad (la mitad de 50%) */
+.desk-wood-texture-overlay {
+  position: absolute;
+  inset: 0;
+  background-image: url('../FOTOS/MATERIALES/madera.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.25;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Viñeta de iluminación cenital */
+.desk-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 42%, rgba(25, 18, 14, 0.65) 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ==========================================================================
+   CÁMARA FOTOGRÁFICA INTERACTIVA 3D (Se alza y rota desde la mesa al centro)
+   ========================================================================== */
+
+.camera-backdrop-dim {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 6, 5, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 110;
+  transition: opacity 0.5s ease;
+}
+
+.camera-backdrop-dim.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.camera-interactive-rig {
+  position: absolute;
+  top: 20px;
+  right: 35px;
+  width: 330px;
+  height: 240px;
+  z-index: 30;
+  cursor: default;
+  transform: rotate(10deg) perspective(1200px) rotateX(8deg) rotateY(-4deg);
+  transform-style: preserve-3d;
+  filter: drop-shadow(0 15px 22px rgba(0, 0, 0, 0.65)) drop-shadow(0 30px 45px rgba(0, 0, 0, 0.45));
+  transition: top 0.65s cubic-bezier(0.25, 1, 0.35, 1),
+              right 0.65s cubic-bezier(0.25, 1, 0.35, 1),
+              width 0.65s cubic-bezier(0.25, 1, 0.35, 1),
+              height 0.65s cubic-bezier(0.25, 1, 0.35, 1),
+              transform 0.65s cubic-bezier(0.25, 1, 0.35, 1),
+              filter 0.65s ease;
+}
+
+.camera-interactive-rig.active {
+  top: 50%;
+  right: 50%;
+  width: 860px;
+  height: 520px;
+  max-width: 95vw;
+  max-height: 90vh;
+  transform: translate(50%, -50%) rotate(0deg);
+  filter: drop-shadow(0 25px 60px rgba(0, 0, 0, 0.9));
+  z-index: 120;
+}
+
+.camera-rig-3d {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.65s cubic-bezier(0.25, 1, 0.35, 1);
+}
+
+.camera-interactive-rig.active .camera-rig-3d {
+  transform: rotateY(180deg);
+}
+
+.camera-rig-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.camera-face-front {
+  z-index: 2;
+  transform: rotateY(0deg);
+  width: 100%;
+  height: 100%;
+}
+
+.camera-face-rear {
+  z-index: 1;
+  transform: rotateY(180deg);
+  width: 100%;
+  height: 100%;
+}
+
+/* Cámara bloqueada (por defecto antes de interactuar con Tomo II) */
+.camera-interactive-rig.camera-locked {
+  cursor: default;
+}
+
+.camera-interactive-rig.camera-locked:hover {
+  transform: rotate(8deg) perspective(1200px) rotateX(10deg) rotateY(-2deg) scale(1.02);
+  filter: drop-shadow(0 18px 26px rgba(0, 0, 0, 0.75)) drop-shadow(0 35px 50px rgba(0, 0, 0, 0.55));
+}
+
+/* Vibración de cámara bloqueada */
+@keyframes cameraLockedShake {
+  0%, 100% { transform: rotate(10deg) perspective(1200px) rotateX(8deg) rotateY(-4deg) translate(0, 0); }
+  20% { transform: rotate(7deg) perspective(1200px) rotateX(10deg) rotateY(-6deg) translate(-4px, 2px); }
+  40% { transform: rotate(13deg) perspective(1200px) rotateX(6deg) rotateY(-2deg) translate(4px, -2px); }
+  60% { transform: rotate(8deg) perspective(1200px) rotateX(9deg) rotateY(-5deg) translate(-3px, 1px); }
+  80% { transform: rotate(11deg) perspective(1200px) rotateX(7deg) rotateY(-3deg) translate(2px, -1px); }
+}
+
+.camera-interactive-rig.camera-shake {
+  animation: cameraLockedShake 0.42s ease !important;
+}
+
+/* Cámara desbloqueada (luego de Tomo II) */
+.camera-interactive-rig.camera-unlocked {
+  cursor: pointer;
+  filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.7)) drop-shadow(0 0 26px rgba(229, 185, 138, 0.6));
+}
+
+.camera-interactive-rig.camera-unlocked:not(.active):hover {
+  transform: rotate(6deg) perspective(1200px) rotateX(6deg) rotateY(-2deg) scale(1.04);
+  filter: drop-shadow(0 20px 35px rgba(0, 0, 0, 0.85)) drop-shadow(0 0 36px rgba(229, 185, 138, 0.85));
+}
+
+/* Lente de la cámara: Iris mecánico cerrado vs Óptica abierta */
+.lens-iris-closed {
+  opacity: 1;
+  transform-origin: 98px 70px;
+  transform: scale(1) rotate(0deg);
+  transition: opacity 0.5s ease, transform 0.75s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.lens-optics-layer {
+  opacity: 0.15;
+  filter: brightness(0.4);
+  transform-origin: 98px 70px;
+  transform: scale(0.9);
+  transition: opacity 0.5s ease, transform 0.6s ease, filter 0.6s ease;
+}
+
+.camera-interactive-rig.camera-unlocked .lens-iris-closed {
+  opacity: 0;
+  transform: scale(0.04) rotate(140deg);
+  pointer-events: none;
+}
+
+.camera-interactive-rig.camera-unlocked .lens-optics-layer {
+  opacity: 1;
+  filter: brightness(1.25);
+  transform: scale(1);
+}
+
+/* LED de la cámara */
+.camera-led-indicator {
+  transition: fill 0.3s ease, filter 0.3s ease, stroke 0.3s ease;
+}
+
+.camera-led-indicator.led-off {
+  fill: #181a1d;
+  stroke: #2a2e34;
+  stroke-width: 0.8;
+}
+
+.camera-led-indicator.led-red-on {
+  fill: #ff2b2b;
+  stroke: #ff9999;
+  stroke-width: 1.2;
+  filter: drop-shadow(0 0 6px rgba(255, 43, 43, 0.95));
+  animation: cameraLedBlink 1.8s infinite ease-in-out;
+}
+
+@keyframes cameraLedBlink {
+  0%, 100% { fill: #ff2b2b; filter: drop-shadow(0 0 4px rgba(255, 43, 43, 0.8)); }
+  50% { fill: #ff6666; filter: drop-shadow(0 0 10px rgba(255, 70, 70, 1)); }
+}
+
+.camera-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* ==========================================================================
+   PILA BASE DE LIBROS (DERECHA - TOMO II Y TOMO III)
+   ========================================================================== */
+
+.book-stack-base {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--book-w);
+  height: var(--book-h);
+  transform: translate(calc(-50% + var(--desk-offset-x)), calc(-50% + var(--desk-offset-y)));
+  z-index: 5;
+  pointer-events: auto;
+}
+
+.table-book {
+  position: absolute;
+  inset: 0;
+  border-radius: 6px 14px 14px 6px;
+  box-shadow: var(--shadow-book-stack);
+  pointer-events: none;
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.25, 1), box-shadow 0.3s ease, filter 0.3s ease;
+}
+
+.table-book.unlocked {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.table-book.unlocked:hover {
+  filter: brightness(1.18);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.75);
+}
+
+/* Pulso de invitación */
+@keyframes tomoPulseGlow {
+  0%, 100% { box-shadow: var(--shadow-book-stack), 0 0 0 rgba(212, 163, 115, 0); }
+  50% { box-shadow: var(--shadow-book-stack), 0 0 28px rgba(229, 185, 138, 0.75), 0 0 48px rgba(186, 128, 245, 0.45); }
+}
+
+.table-book.pulse-glow,
+.active-book-wrapper.pulse-glow .book-3d {
+  animation: tomoPulseGlow 2.2s infinite ease-in-out;
+}
+
+/* Tomo III (Inferior: asoma abajo a la derecha - Violeta un poco más claro) */
+.book-level-3 {
+  background: linear-gradient(135deg, #62377e 0%, #46225e 100%);
+  transform: rotate(4.8deg) translate(20px, 16px);
+  border-left: 12px solid #36174a;
+}
+
+.book-level-3.unlocked:hover {
+  transform: rotate(4.8deg) translate(28px, 22px) scale(1.03);
+}
+
+/* Tomo II (Intermedio: asoma arriba a la izquierda) */
+.book-level-2 {
+  background: linear-gradient(135deg, #442a22 0%, #291812 100%);
+  transform: rotate(-3.5deg) translate(-16px, -4px);
+  border-left: 12px solid #20120d;
+}
+
+.book-level-2.unlocked:hover {
+  transform: rotate(-3.5deg) translate(-26px, -12px) scale(1.03);
+}
+
+.book-cover-decor {
+  position: absolute;
+  inset: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px 8px 8px 4px;
+  display: flex;
+  align-items: flex-end;
+  padding: 16px;
+}
+
+.book-spine-title {
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   LIBRO INTERACTIVO (TOMO I - SUPERIOR)
+   ========================================================================== */
+
+.active-book-wrapper {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--book-w);
+  height: var(--book-h);
+  z-index: 20;
+  transition: transform 0.46s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.46s ease;
+  transform-style: preserve-3d;
+}
+
+/* --- ESTADO 1: EN LA PILA A LA DERECHA --- */
+.active-book-wrapper.state-stacked {
+  transform: translate(calc(-50% + var(--desk-offset-x)), calc(-50% + var(--desk-offset-y))) rotate(0.6deg) scale(0.76);
+  cursor: pointer;
+  z-index: 30;
+}
+
+.active-book-wrapper:not(.tomo-2-book):not(.tomo-3-book).state-stacked {
+  z-index: 30;
+}
+
+.active-book-wrapper.state-stacked:hover {
+  transform: translate(calc(-50% + var(--desk-offset-x)), calc(-50% + var(--desk-offset-y) - 10px)) rotate(1.2deg) scale(0.78);
+}
+
+.active-book-wrapper.state-stacked .book-3d {
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65), 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* --- ESTADO 2: ABIERTO EN 2 PÁGINAS AL CENTRO --- */
+.active-book-wrapper.state-open {
+  width: var(--book-open-w);
+  height: var(--book-open-h);
+  transform: translate(-50%, -50%) rotate(0deg) scale(1);
+  z-index: 70;
+  overflow: visible;
+}
+
+.active-book-wrapper.state-open .book-3d {
+  box-shadow: var(--shadow-elevated);
+  overflow: visible;
+}
+
+/* --- ESTADO 3: CERRADO A LA IZQUIERDA BOCA ABAJO --- */
+.active-book-wrapper.state-closed-left {
+  width: var(--book-w);
+  height: var(--book-h);
+  transform: translate(calc(-50% - var(--desk-offset-x)), calc(-50% + var(--desk-offset-y))) rotate(-4.5deg) scale(0.76);
+  z-index: 25;
+}
+
+.active-book-wrapper.state-closed-left .book-3d {
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.35);
+  transform: rotateY(180deg);
+}
+
+/* ==========================================================================
+   SISTEMA DE COREOGRAFÍA FÍSICA EN DOS FASES (ARRIBA EN CENTRO Y TRASLADOS)
+   ========================================================================== */
+
+/* Estados estáticos de libro cerrado en el centro ("arriba") */
+.active-book-wrapper.closed-at-center {
+  width: var(--book-w) !important;
+  height: var(--book-h) !important;
+  transform: translate(-50%, -50%) rotate(0deg) scale(1) !important;
+  z-index: 70 !important;
+  pointer-events: none !important;
+}
+
+.active-book-wrapper.closed-at-center .book-interior {
+  display: none !important;
+}
+
+.active-book-wrapper.closed-at-center .book-front-cover {
+  display: flex !important;
+}
+
+.active-book-wrapper.closed-at-center .book-3d {
+  transform: rotateY(0deg) !important;
+  transition: none !important;
+}
+
+.active-book-wrapper.closed-left-at-center {
+  width: var(--book-w) !important;
+  height: var(--book-h) !important;
+  transform: translate(-50%, -50%) rotate(0deg) scale(1) !important;
+  z-index: 70 !important;
+  pointer-events: none !important;
+}
+
+.active-book-wrapper.closed-left-at-center .book-interior {
+  display: none !important;
+}
+
+.active-book-wrapper.closed-left-at-center .book-3d {
+  transform: rotateY(180deg) !important;
+  transition: none !important;
+}
+
+/* FASE DE VIAJE CERRADO: DE LA PILA O IZQUIERDA AL CENTRO */
+.active-book-wrapper.traveling-closed-to-center {
+  width: var(--book-w) !important;
+  height: var(--book-h) !important;
+  transform: translate(-50%, -50%) rotate(0deg) scale(1) !important;
+  transition: transform 0.44s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  z-index: 70 !important;
+  pointer-events: none !important;
+}
+
+.active-book-wrapper.traveling-closed-to-center .book-interior {
+  display: none !important;
+}
+
+.active-book-wrapper.traveling-closed-to-center .book-front-cover {
+  display: flex !important;
+}
+
+.active-book-wrapper.traveling-closed-to-center .book-3d {
+  transform: rotateY(0deg) !important;
+  transition: none !important;
+}
+
+.active-book-wrapper.traveling-closed-left-to-center {
+  width: var(--book-w) !important;
+  height: var(--book-h) !important;
+  transform: translate(-50%, -50%) rotate(0deg) scale(1) !important;
+  transition: transform 0.44s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  z-index: 70 !important;
+  pointer-events: none !important;
+}
+
+.active-book-wrapper.traveling-closed-left-to-center .book-interior {
+  display: none !important;
+}
+
+.active-book-wrapper.traveling-closed-left-to-center .book-3d {
+  transform: rotateY(180deg) !important;
+  transition: none !important;
+}
+
+/* FASE 1 DE CIERRE: CIERRE POR LA MITAD EN EL CENTRO ("ARRIBA") HACIA LA DERECHA (PORTADA) */
+.active-book-wrapper.book-closing-in-center-to-stack {
+  pointer-events: none !important;
+  transform: translate(-50%, -50%) rotate(0deg) scale(1) !important;
+}
+
+.active-book-wrapper.book-closing-in-center-to-stack .spread-left-half {
+  transform-origin: right center !important;
+  animation: bookFoldCloseToRight 0.42s cubic-bezier(0.35, 0, 0.25, 1) forwards !important;
+  z-index: 65 !important;
+}
+
+@keyframes bookFoldCloseToRight {
+  0% {
+    transform: rotateY(0deg);
+    box-shadow: none;
+  }
+  45% {
+    box-shadow: 14px 0 32px rgba(0, 0, 0, 0.5);
+  }
+  100% {
+    transform: rotateY(180deg);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* FASE 1 DE CIERRE: CIERRE POR LA MITAD EN EL CENTRO ("ARRIBA") HACIA LA IZQUIERDA (CONTRATAPA) */
+.active-book-wrapper.book-closing-in-center-to-left {
+  pointer-events: none !important;
+  transform: translate(-50%, -50%) rotate(0deg) scale(1) !important;
+}
+
+.active-book-wrapper.book-closing-in-center-to-left .spread-right-half {
+  transform-origin: left center !important;
+  animation: bookFoldCloseToLeft 0.42s cubic-bezier(0.35, 0, 0.25, 1) forwards !important;
+  z-index: 65 !important;
+}
+
+@keyframes bookFoldCloseToLeft {
+  0% {
+    transform: rotateY(0deg);
+    box-shadow: none;
+  }
+  45% {
+    box-shadow: -14px 0 32px rgba(0, 0, 0, 0.5);
+  }
+  100% {
+    transform: rotateY(-180deg);
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* FASE 2 DE APERTURA: APERTURA POR LA MITAD EN EL CENTRO DESDE LA DERECHA */
+.active-book-wrapper.book-opening-in-center-from-stack {
+  pointer-events: none !important;
+  transform: translate(-50%, -50%) rotate(0deg) scale(1) !important;
+}
+
+.active-book-wrapper.book-opening-in-center-from-stack .book-3d,
+.active-book-wrapper.book-opening-in-center-from-left .book-3d,
+.active-book-wrapper.book-closing-in-center-to-stack .book-3d,
+.active-book-wrapper.book-closing-in-center-to-left .book-3d {
+  box-shadow: none !important;
+}
+
+.active-book-wrapper.book-opening-in-center-from-stack .spread-left-half {
+  transform-origin: right center !important;
+  animation: bookFoldOpenFromRight 0.46s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+  z-index: 65 !important;
+}
+
+@keyframes bookFoldOpenFromRight {
+  0% {
+    transform: rotateY(180deg);
+    box-shadow: 14px 0 28px rgba(0, 0, 0, 0.5);
+  }
+  100% {
+    transform: rotateY(0deg);
+    box-shadow: none;
+  }
+}
+
+/* FASE 2 DE APERTURA: APERTURA POR LA MITAD EN EL CENTRO DESDE LA IZQUIERDA */
+.active-book-wrapper.book-opening-in-center-from-left {
+  pointer-events: none !important;
+  transform: translate(-50%, -50%) rotate(0deg) scale(1) !important;
+}
+
+.active-book-wrapper.book-opening-in-center-from-left .spread-right-half {
+  transform-origin: left center !important;
+  animation: bookFoldOpenFromLeft 0.46s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+  z-index: 65 !important;
+}
+
+@keyframes bookFoldOpenFromLeft {
+  0% {
+    transform: rotateY(-180deg);
+    box-shadow: -14px 0 28px rgba(0, 0, 0, 0.5);
+  }
+  100% {
+    transform: rotateY(0deg);
+    box-shadow: none;
+  }
+}
+
+/* --- TOMO II: POSICIONAMIENTO EN PILA Y A LA IZQUIERDA --- */
+.tomo-2-book.state-stacked {
+  transform: translate(calc(-50% + var(--desk-offset-x) - 12px), calc(-50% + var(--desk-offset-y) - 5px)) rotate(-2.8deg) scale(0.76);
+  z-index: 20;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.tomo-2-book.state-stacked.unlocked {
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 20;
+}
+
+.tomo-2-book.state-stacked.unlocked:hover {
+  transform: translate(calc(-50% + var(--desk-offset-x) - 16px), calc(-50% + var(--desk-offset-y) - 14px)) rotate(-2deg) scale(0.78);
+  z-index: 22;
+}
+
+.tomo-2-book.state-open {
+  transform: translate(-50%, -50%) rotate(0deg) scale(1);
+  z-index: 70;
+  overflow: visible;
+}
+
+.tomo-2-book.state-closed-left {
+  transform: translate(calc(-50% - var(--desk-offset-x) + 32px), calc(-50% + var(--desk-offset-y) + 16px)) rotate(3.2deg) scale(0.76);
+  z-index: 26;
+  cursor: pointer;
+}
+
+/* Estructura 3D del Libro */
+.book-3d {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.85s cubic-bezier(0.25, 1, 0.35, 1), box-shadow 0.85s ease;
+  border-radius: 8px 14px 14px 8px;
+}
+
+.book-face {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.book-face.book-interior {
+  overflow: visible;
+}
+
+/* --------------------------------------------------------------------------
+   CARA 1: PORTADA FRONTAL (TOMO I - TAPA LIMPIA)
+   -------------------------------------------------------------------------- */
+.book-front-cover {
+  background: linear-gradient(145deg, #271431 0%, #15091c 100%);
+  border-left: 14px solid #100516;
+  display: flex;
+  flex-direction: column;
+  color: var(--book-cover-accent);
+  z-index: 3;
+}
+
+/* Capa de textura para las tapas de los libros (opacidad 25% adaptada) */
+.book-cover-texture-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.32;
+  mix-blend-mode: overlay;
+  z-index: 10;
+  border-radius: inherit;
+}
+
+/* Espejado horizontal en contratapas para correspondencia física del forrado */
+.book-cover-texture-layer.mirrored {
+  transform: scaleX(-1);
+}
+
+.tomo-1-book .book-cover-texture-layer {
+  background-image: url('../FOTOS/MATERIALES/libro1.png');
+}
+
+.tomo-2-book .book-cover-texture-layer {
+  background-image: url('../FOTOS/MATERIALES/libro2.png');
+}
+
+.tomo-3-book .book-cover-texture-layer,
+.book-level-3 .book-cover-texture-layer {
+  background-image: url('../FOTOS/MATERIALES/libro3.png');
+}
+
+.cover-emboss-border {
+  margin: 14px;
+  height: calc(100% - 28px);
+  border: 2.8px solid #d4af37;
+  border-radius: 4px 10px 10px 4px;
+  padding: 26px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.65), 0 0 12px rgba(212, 175, 55, 0.35);
+  position: relative;
+  z-index: 2;
+}
+
+.cover-top-volume {
+  text-align: center;
+}
+
+.volume-badge {
+  font-size: 0.82rem;
+  letter-spacing: 0.32em;
+  font-weight: 700;
+  color: #dfb76c;
+  opacity: 1;
+  text-transform: uppercase;
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  padding: 3px 10px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  display: inline-block;
+}
+
+.cover-main-info {
+  text-align: center;
+  margin: auto 0;
+}
+
+.cover-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 2.1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.16;
+  color: #f7f4ed;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95), 0 0 10px rgba(255, 255, 255, 0.15);
+  margin-bottom: 12px;
+}
+
+.cover-subtitle {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 0.96rem;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  color: #e5c158;
+  opacity: 0.95;
+  line-height: 1.35;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+}
+
+.cover-bottom-space {
+  height: 20px;
+}
+
+/* --------------------------------------------------------------------------
+   CARA 2: INTERIOR DEL LIBRO (ÁLBUM ABIERTO CON PASO DE PÁGINAS 3D)
+   -------------------------------------------------------------------------- */
+.book-interior {
+  display: none;
+  background: transparent;
+  padding: 0;
+  border-radius: 12px;
+  z-index: 4;
+  overflow: visible;
+}
+
+.state-open .book-front-cover {
+  display: none;
+}
+
+.state-open .book-interior {
+  display: block;
+}
+
+/* CONTENEDOR 3D DE LAS PÁGINAS (Transparente para que cada mitad contenga su propia tapa física) */
+.book-spread-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  perspective: 2500px;
+  transform-style: preserve-3d;
+  display: flex;
+  background: transparent !important;
+  border-radius: 8px;
+  overflow: visible;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.tomo-1-book .book-spread-container,
+.tomo-2-book .book-spread-container,
+.tomo-3-book .book-spread-container {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.spread-half {
+  flex: 0 0 50%;
+  width: 50%;
+  max-width: 50%;
+  height: 100%;
+  position: relative;
+  background: transparent;
+  cursor: default;
+  box-sizing: border-box;
+  transform-style: preserve-3d;
+}
+
+/* Base de tapa dura física (cejilla) visible sobresaliendo por fuera de las páginas */
+.spread-half::before {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  pointer-events: none;
+}
+
+.spread-left-half {
+  border-radius: 6px 0 0 6px;
+  padding: 0;
+}
+
+.spread-left-half::before {
+  top: -6px;
+  bottom: -6px;
+  left: -8px;
+  right: 0;
+  border-radius: 8px 0 0 8px;
+  box-shadow: -5px 12px 28px rgba(0, 0, 0, 0.55);
+}
+
+.spread-right-half {
+  border-radius: 0 6px 6px 0;
+  padding: 0;
+}
+
+.spread-right-half::before {
+  top: -6px;
+  bottom: -6px;
+  left: 0;
+  right: -8px;
+  border-radius: 0 8px 8px 0;
+  box-shadow: 5px 12px 28px rgba(0, 0, 0, 0.55);
+}
+
+.tomo-1-book .spread-half::before {
+  background: linear-gradient(145deg, #271431 0%, #15091c 100%);
+  border: 1px solid rgba(223, 183, 108, 0.25);
+}
+
+.tomo-2-book .spread-half::before {
+  background: linear-gradient(135deg, #442a22 0%, #291812 100%);
+  border: 1px solid rgba(212, 140, 89, 0.25);
+}
+
+.tomo-3-book .spread-half::before {
+  background: linear-gradient(135deg, #62377e 0%, #46225e 100%);
+  border: 1px solid rgba(219, 168, 255, 0.25);
+}
+
+/* Flaps de tapa física en el dorso de cada mitad de página para el plegado 3D realista */
+.spread-cover-flap {
+  position: absolute !important;
+  transform: rotateY(180deg) !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+  z-index: 10 !important;
+  pointer-events: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+.spread-cover-flap.flap-front {
+  top: -6px !important;
+  bottom: -6px !important;
+  left: -8px !important;
+  right: 0 !important;
+  border-radius: 8px 14px 14px 8px !important;
+}
+
+.spread-cover-flap.flap-back {
+  top: -6px !important;
+  bottom: -6px !important;
+  left: 0 !important;
+  right: -8px !important;
+  border-radius: 14px 8px 8px 14px !important;
+  border-right: 14px solid #0e0413 !important;
+}
+
+.tomo-2-book .spread-cover-flap.flap-back {
+  border-right: 14px solid #20120d !important;
+}
+
+.page-paper {
+  width: 100%;
+  height: 100%;
+  background-color: var(--book-paper-bg);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+  box-sizing: border-box;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.spread-left-half .page-paper {
+  border-radius: 3px 0 0 3px;
+  box-shadow: 
+    -2px 0 6px rgba(0, 0, 0, 0.25),
+    0 4px 10px rgba(0, 0, 0, 0.15),
+    inset -14px 0 22px rgba(0, 0, 0, 0.07);
+  padding: 30px 24px 22px 52px;
+}
+
+.spread-right-half .page-paper {
+  border-radius: 0 3px 3px 0;
+  box-shadow: 
+    2px 0 6px rgba(0, 0, 0, 0.25),
+    0 4px 10px rgba(0, 0, 0, 0.15),
+    inset 14px 0 22px rgba(0, 0, 0, 0.07);
+  padding: 30px 52px 22px 24px;
+}
+
+/* Capa de textura de papel para las páginas interiores (opacidad 80% adaptada) */
+.page-texture-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.8;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+.entry-layout-left,
+.frontispiece-right,
+.entry-layout-right,
+.empty-left-page,
+.tomo2-page-cutouts-container,
+.tomo2-frontispiece-right {
+  position: relative;
+  z-index: 2;
+}
+
+.empty-left-page {
+  width: 100%;
+  height: 100%;
+  flex: 1;
+}
+
+/* Imagen overlay fotográfico sobre los paisajes */
+.landscape-overlay-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* Lomo central de encuadernación */
+.book-central-gutter {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 16px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    to right,
+    rgba(0,0,0,0.14) 0%,
+    rgba(0,0,0,0.04) 30%,
+    rgba(255,255,255,0.2) 50%,
+    rgba(0,0,0,0.04) 70%,
+    rgba(0,0,0,0.14) 100%
+  );
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.central-crease-line {
+  width: 1px;
+  height: 94%;
+  border-left: 1px dashed rgba(0, 0, 0, 0.2);
+}
+
+.spine-fold-shadow {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 25px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.fold-left {
+  right: 0;
+  background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.05));
+}
+
+.fold-right {
+  left: 0;
+  background: linear-gradient(to left, transparent, rgba(0, 0, 0, 0.05));
+}
+
+/* ==========================================================================
+   ESTILOS DE CONTENIDO DE LAS PÁGINAS (SPREAD 0 Y SPREADS 1..11)
+   ========================================================================== */
+
+/* SPREAD 0: PORTADILLA Y DEDICATORIA DE ERNESTO SABATO */
+.frontispiece-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  padding: 20px 30px;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 2;
+}
+
+.frontispiece-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.95rem;
+  font-weight: 600;
+  color: #1e1b18;
+  line-height: 1.15;
+  margin-bottom: 8px;
+}
+
+.frontispiece-subtitle {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1rem;
+  font-style: italic;
+  color: #73685c;
+  margin-bottom: 30px;
+}
+
+.frontispiece-divider {
+  width: 40px;
+  height: 1px;
+  background: #c49d65;
+  margin-bottom: 28px;
+}
+
+.frontispiece-quote {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.12rem;
+  line-height: 1.58;
+  color: #383129;
+  font-style: italic;
+  max-width: 330px;
+  margin-bottom: 14px;
+}
+
+.frontispiece-author {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: #8c7e6f;
+  text-transform: uppercase;
+}
+
+/* SPREADS 1..11: PÁGINA IZQUIERDA (ENTRADA Y TEXTO) */
+.entry-layout-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.entry-text-block {
+  width: 100%;
+  max-width: 100%;
+}
+
+.entry-label-plain {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #8c7653;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.entry-title-text {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.7rem;
+  font-weight: 600;
+  color: #1a1714;
+  line-height: 1.15;
+  margin-bottom: 12px;
+}
+
+.entry-date-sub {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 0.95rem;
+  font-style: italic;
+  color: #72685d;
+  margin-bottom: 16px;
+}
+
+.entry-narrative {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.12rem;
+  line-height: 1.72;
+  color: #342e27;
+  text-align: justify;
+  text-justify: inter-word;
+  margin-top: 24px; /* 2 enters de separación respecto a la ficha */
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Numeración a la izquierda */
+.folio-left {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #000000;
+  text-align: left;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: 8px;
+}
+
+/* SPREADS 1..11: PÁGINA DERECHA (SÓLO FOTOGRAFÍA HORIZONTAL) */
+.entry-layout-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.photo-only-card {
+  width: 100%;
+  display: block;
+  background: #ffffff;
+  padding: 10px;
+  border-radius: 4px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  margin: auto 0;
+}
+
+.photo-only-card:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
+}
+
+.photo-media-box {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 100%;
+  border-radius: 2px;
+  overflow: hidden;
+  background: #191e23;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-media-box img,
+.photo-media-box svg {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+}
+
+/* Numeración a la derecha */
+.folio-right {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #000000;
+  text-align: right;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: 8px;
+  margin-top: 8px;
+}
+
+/* ==========================================================================
+   HOJA MÓVIL 3D (ANIMACIÓN FÍSICA REALISTA DE DAR VUELTA LA PÁGINA)
+   ========================================================================== */
+
+/* Sombra proyectada bajo la hoja en movimiento sobre la página inferior */
+.under-leaf-shadow {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  pointer-events: none;
+  z-index: 15;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.under-leaf-shadow.shadow-right {
+  left: 50%;
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.45) 0%,
+    rgba(0, 0, 0, 0.2) 25%,
+    rgba(0, 0, 0, 0.06) 55%,
+    transparent 85%
+  );
+}
+
+.under-leaf-shadow.shadow-left {
+  left: 0;
+  background: linear-gradient(
+    to left,
+    rgba(0, 0, 0, 0.45) 0%,
+    rgba(0, 0, 0, 0.2) 25%,
+    rgba(0, 0, 0, 0.06) 55%,
+    transparent 85%
+  );
+}
+
+.flipping-leaf {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  height: 100%;
+  left: 50%;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 30;
+  will-change: transform;
+}
+
+.flipping-leaf.active {
+  opacity: 1;
+}
+
+.flipping-leaf.turning-smooth {
+  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.flipping-leaf.turning-dragging {
+  transition: none; /* Respuesta instantánea al arrastrar */
+}
+
+.leaf-face {
+  position: absolute;
+  inset: 0;
+  background-color: var(--book-paper-bg);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.leaf-front {
+  padding: 30px 52px 22px 24px;
+  z-index: 2;
+  border-radius: 0 3px 3px 0;
+  box-shadow: 
+    inset -4px 0 16px rgba(0, 0, 0, 0.06),
+    -10px 0 28px rgba(0, 0, 0, 0.25);
+}
+
+.leaf-back {
+  padding: 30px 24px 22px 52px;
+  transform: rotateY(180deg);
+  z-index: 1;
+  border-radius: 3px 0 0 3px;
+  box-shadow: 
+    inset 4px 0 16px rgba(0, 0, 0, 0.06),
+    10px 0 28px rgba(0, 0, 0, 0.25);
+}
+
+/* Brillo especular dinámico que simula el cilindro de curvatura del papel */
+.leaf-curl-highlight {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+  opacity: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.35) 42%,
+    rgba(255, 255, 255, 0.75) 50%,
+    rgba(0, 0, 0, 0.1) 58%,
+    transparent 85%
+  );
+  transition: opacity 0.25s ease;
+}
+
+/* Sombra progresiva en la cara que gira alejándose de la luz */
+.leaf-shadow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.32), transparent 50%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+/* Animaciones 3D cinemáticas de paso de página */
+.flipping-leaf.animate-forward {
+  animation: pageTurnForward 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.flipping-leaf.animate-backward {
+  animation: pageTurnBackward 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes pageTurnForward {
+  0% {
+    transform: rotateY(0deg) rotateZ(0deg) skewY(0deg) translateZ(0px);
+  }
+  30% {
+    transform: rotateY(-52deg) rotateZ(-3.2deg) skewY(-2.6deg) translateZ(30px);
+  }
+  65% {
+    transform: rotateY(-120deg) rotateZ(-1.8deg) skewY(1.6deg) translateZ(24px);
+  }
+  100% {
+    transform: rotateY(-180deg) rotateZ(0deg) skewY(0deg) translateZ(0px);
+  }
+}
+
+@keyframes pageTurnBackward {
+  0% {
+    transform: rotateY(-180deg) rotateZ(0deg) skewY(0deg) translateZ(0px);
+  }
+  30% {
+    transform: rotateY(-128deg) rotateZ(3.2deg) skewY(2.6deg) translateZ(30px);
+  }
+  65% {
+    transform: rotateY(-60deg) rotateZ(1.8deg) skewY(-1.6deg) translateZ(24px);
+  }
+  100% {
+    transform: rotateY(0deg) rotateZ(0deg) skewY(0deg) translateZ(0px);
+  }
+}
+
+.under-leaf-shadow.animate-forward-shadow {
+  animation: shadowForward 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.under-leaf-shadow.animate-backward-shadow {
+  animation: shadowBackward 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes shadowForward {
+  0% { opacity: 0; left: 50%; }
+  35% { opacity: 0.75; left: 50%; }
+  50% { opacity: 0.45; }
+  65% { opacity: 0.65; left: 0; }
+  100% { opacity: 0; left: 0; }
+}
+
+@keyframes shadowBackward {
+  0% { opacity: 0; left: 0; }
+  35% { opacity: 0.75; left: 0; }
+  50% { opacity: 0.45; }
+  65% { opacity: 0.65; left: 50%; }
+  100% { opacity: 0; left: 50%; }
+}
+
+.flipping-leaf.animate-forward .leaf-curl-highlight,
+.flipping-leaf.animate-backward .leaf-curl-highlight {
+  animation: highlightSweep 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes highlightSweep {
+  0% { opacity: 0; }
+  30% { opacity: 0.85; }
+  50% { opacity: 0.95; }
+  75% { opacity: 0.5; }
+  100% { opacity: 0; }
+}
+
+/* ==========================================================================
+   FOTOGRAFÍA DESPEGADA EN EL CENTRO DE LA MESA
+   ========================================================================== */
+
+.detached-photo-stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.detached-photo-stage.visible {
+  pointer-events: none;
+  opacity: 1;
+}
+
+.detached-photo-card {
+  width: 410px;
+  max-width: 84vw;
+  background: #ffffff;
+  padding: 12px;
+  border-radius: 6px;
+  box-shadow: 
+    0 24px 50px rgba(0, 0, 0, 0.68),
+    0 6px 14px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  pointer-events: auto;
+  transform: rotate(2.5deg) scale(0.95);
+  transition: transform 0.65s cubic-bezier(0.2, 0.8, 0.25, 1), box-shadow 0.4s ease;
+}
+
+.detached-photo-stage.visible .detached-photo-card {
+  transform: rotate(2.5deg) scale(1);
+  pointer-events: auto;
+}
+
+.detached-photo-card:hover {
+  transform: rotate(1deg) scale(1.07);
+  box-shadow: 
+    0 30px 60px rgba(0, 0, 0, 0.75),
+    0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.detached-photo-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  border-radius: 3px;
+  overflow: hidden;
+  background: #181d22;
+}
+
+.detached-photo-landscape {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.detached-photo-landscape img,
+.detached-photo-landscape svg {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+}
+
+.detached-photo-cutouts {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* ==========================================================================
+   CARA 3: CONTRATAPA POSTERIOR (BOCA ABAJO A LA IZQUIERDA)
+   ========================================================================== */
+
+.book-back-cover {
+  background: linear-gradient(145deg, #24122d 0%, #13071a 100%);
+  border-right: 14px solid #0e0413;
+  color: var(--book-back-text);
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+  cursor: pointer;
+}
+
+.back-content {
+  margin: 14px;
+  height: calc(100% - 28px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px 4px 4px 10px;
+  padding: 26px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.back-stamp {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  width: 100%;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 10px;
+}
+
+.back-stamp-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  gap: 4px;
+  width: 100%;
+}
+
+.stamp-series {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #dfb76c;
+  line-height: 1.25;
+  text-align: right;
+}
+
+.stamp-code {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #a4b3b8;
+  text-transform: uppercase;
+  text-align: right;
+}
+
+.stamp-date {
+  display: none;
+}
+
+.back-manifesto {
+  margin: auto 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.manifesto-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.18rem;
+  color: #e5edf0;
+  font-weight: 500;
+}
+
+.manifesto-divider {
+  width: 36px;
+  height: 1px;
+  background: #5d757e;
+  margin: 10px auto 14px auto;
+}
+
+.manifesto-quote {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.08rem;
+  line-height: 1.62;
+  font-style: italic;
+  color: #cdd9dc;
+  margin-bottom: 16px;
+  text-align: justify;
+  text-justify: inter-word;
+  max-width: 82%;
+}
+
+.back-barcode-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 68px;
+  padding-bottom: 4px;
+}
+
+.barcode-lines {
+  width: 158px;
+  height: 25px;
+  background: repeating-linear-gradient(
+    90deg,
+    #c8c0b0 0px,
+    #c8c0b0 2.2px,
+    transparent 2.2px,
+    transparent 4.4px,
+    #c8c0b0 4.4px,
+    #c8c0b0 8.0px,
+    transparent 8.0px,
+    transparent 10.5px
+  );
+  opacity: 0.8;
+}
+
+.barcode-number {
+  font-family: monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  color: #c8c0b0;
+  font-weight: 500;
+  opacity: 0.8;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.reopen-book-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+  transition: var(--transition-fast);
+}
+
+.reopen-book-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   DISEÑO RESPONSIVO (MÓVILES Y TABLETS)
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  :root {
+    --book-w: 255px;
+    --book-h: 345px;
+    --book-open-w: 92vw;
+    --book-open-h: 78vh;
+    --desk-offset-x: 27vw;
+  }
+  
+  .camera-container {
+    top: 25px;
+    right: 30px;
+    width: 135px;
+    height: 100px;
+  }
+
+  .page-paper {
+    padding: 22px 22px 18px 22px;
+  }
+
+  .entry-title-text {
+    font-size: 1.45rem;
+  }
+
+  .entry-narrative {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --book-w: 215px;
+    --book-h: 290px;
+    --book-open-w: 95vw;
+    --book-open-h: 84vh;
+    --desk-offset-x: 23vw;
+    --desk-offset-y: 6vh;
+  }
+
+  .camera-interactive-rig:not(.active) {
+    top: 16px;
+    right: 18px;
+    width: 110px;
+    height: 85px;
+  }
+
+  .cover-title {
+    font-size: 1.6rem;
+  }
+
+  .page-paper {
+    padding: 16px 14px 12px 14px;
+  }
+
+  .entry-title-text {
+    font-size: 1.22rem;
+  }
+
+  .entry-narrative {
+    font-size: 0.92rem;
+    line-height: 1.42;
+  }
+
+  .detached-photo-media {
+    height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --book-w: 185px;
+    --book-h: 260px;
+    --book-open-w: 96vw;
+    --book-open-h: 86vh;
+    --desk-offset-x: 22vw;
+    --desk-offset-y: 8vh;
+  }
+
+  .camera-interactive-rig:not(.active) {
+    top: 12px;
+    right: 12px;
+    width: 95px;
+    height: 72px;
+  }
+
+  .detached-photo-media {
+    height: 175px;
+  }
+}
+
+/* ==========================================================================
+   RECORTES DE PERSONAS COLOCADOS SOBRE EL PAISAJE EN LA MESA
+   ========================================================================== */
+
+.placed-cutout {
+  position: absolute;
+  pointer-events: none;
+  filter: drop-shadow(2px 5px 7px rgba(0, 0, 0, 0.75));
+  transform-origin: bottom center;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
+  animation: cutoutDropIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes cutoutDropIn {
+  0% { opacity: 0; transform: translateY(-30px) scale(0.8); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.placed-cutout svg,
+.placed-cutout img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* ==========================================================================
+   TOMO II - LIBRO FÍSICO 3D (RECUERDOS ANCLADOS A PERSONAS)
+   ========================================================================== */
+
+/* Portada Frontal del Tomo II (Violeta un poco más claro que Tomo I) */
+.tomo-2-cover {
+  background: linear-gradient(145deg, #462559 0%, #2e143d 100%);
+  border-left: 14px solid #230d30;
+  display: flex;
+  flex-direction: column;
+  color: #eedcfc;
+  z-index: 3;
+}
+
+.tomo-2-cover .cover-emboss-border {
+  border-color: #d4af37;
+}
+
+.tomo-2-cover .volume-badge {
+  color: #dfb76c;
+}
+
+.tomo-2-cover .cover-title {
+  color: #f7f4ed;
+}
+
+.tomo-2-cover .cover-subtitle {
+  color: #dfb76c;
+}
+
+.tomo-2-interior {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes tomoShake {
+  0%, 100% { transform: translate(calc(-50% + var(--desk-offset-x) - 12px), calc(-50% + var(--desk-offset-y) - 5px)) rotate(-2.8deg); }
+  25% { transform: translate(calc(-50% + var(--desk-offset-x) - 16px), calc(-50% + var(--desk-offset-y) - 5px)) rotate(-4.2deg); }
+  75% { transform: translate(calc(-50% + var(--desk-offset-x) - 8px), calc(-50% + var(--desk-offset-y) - 5px)) rotate(-1.5deg); }
+}
+
+.tomo-2-book.tomo-shake {
+  animation: tomoShake 0.4s ease;
+}
+
+/* Contratapa Posterior del Tomo II */
+.tomo-2-back-cover {
+  background: linear-gradient(145deg, #402052 0%, #291138 100%);
+  border-right: 14px solid #1c0a28;
+  color: #f0e2fc;
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+  cursor: pointer;
+}
+
+/* SPREAD 0 TOMO II: PORTADILLA Y CITA DE ROLAND BARTHES */
+.tomo2-frontispiece-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  padding: 20px 28px;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 2;
+}
+
+.tomo2-frontispiece-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.85rem;
+  font-weight: 600;
+  color: #1e1a17;
+  line-height: 1.15;
+  margin-bottom: 8px;
+}
+
+.tomo2-frontispiece-subtitle {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 0.98rem;
+  font-style: italic;
+  color: #7a6b5c;
+  margin-bottom: 26px;
+}
+
+.tomo2-frontispiece-divider {
+  width: 44px;
+  height: 1px;
+  background: #bb8652;
+  margin-bottom: 24px;
+}
+
+.tomo2-frontispiece-quote {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.16rem;
+  line-height: 1.58;
+  color: #362e26;
+  font-style: italic;
+  max-width: 340px;
+  margin-bottom: 14px;
+}
+
+.tomo2-frontispiece-author {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: #8c7864;
+  text-transform: uppercase;
+}
+
+/* ==========================================================================
+   TOMO II: DISTRIBUCIÓN EDITORIAL (4 FOTOS POR PÁGINA) Y LÓGICA COMBINATORIA
+   ========================================================================== */
+
+.tomo2-clean-page-layout {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 2;
+  padding: 10px 0;
+}
+
+/* Rastreador de 4 siluetas punteadas flotando por encima del libro */
+.tomo2-floating-tracker {
+  position: absolute;
+  top: -96px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 52px;
+  align-items: center;
+  z-index: 60;
+  pointer-events: auto;
+  user-select: none;
+}
+
+.tomo2-dashed-char-icon {
+  width: 52px;
+  height: 68px;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
+.tomo2-dashed-char-icon:hover {
+  transform: translateY(-4px) scale(1.12);
+}
+
+.tomo2-dashed-char-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: transparent !important;
+  border: none !important;
+}
+
+.tomo2-dashed-char-icon .char-path {
+  fill: transparent;
+  stroke: rgba(235, 222, 206, 0.78);
+  stroke-width: 1.2;
+  stroke-dasharray: 3.5 2.5;
+  transition: fill 0.3s ease, stroke 0.3s ease, filter 0.3s ease;
+}
+
+.tomo2-dashed-char-icon:hover .char-path {
+  stroke: #ffffff;
+}
+
+.tomo2-dashed-char-icon.assigned .char-path {
+  fill: #ffffff;
+  stroke: #ffffff;
+  stroke-width: 1.2;
+  stroke-dasharray: none;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.45));
+}
+
+/* Cuadrícula fija de 4 posiciones por página en Tomo II (2x2) */
+.tomo2-fixed-photos-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 16px;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-items: center;
+  box-sizing: border-box;
+}
+
+/* Celda fija de cada recorte */
+.tomo2-cutout-slot {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+/* Celda con silueta en líneas punteadas cuando la foto desaparece por exclusión */
+.tomo2-cutout-slot.slot-dashed-placeholder {
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.tomo2-dashed-ghost-wrap {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.45;
+  transition: opacity 0.35s ease;
+}
+
+.ghost-silhouette-svg {
+  max-width: 84%;
+  max-height: 78%;
+  display: block;
+}
+
+.ghost-path {
+  fill: none;
+  stroke: #8c7653;
+  stroke-width: 0.95;
+  stroke-dasharray: 3 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Celda oculta por exclusión de personajes: preserva su espacio para que NADA se corra */
+.tomo2-cutout-slot.slot-hidden {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tomo2-cutout-img-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  cursor: pointer;
+  transition: transform 0.22s ease;
+}
+
+.tomo2-cutout-only-img {
+  max-width: 88%;
+  max-height: 88%;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.22));
+  transition: transform 0.24s cubic-bezier(0.2, 0.8, 0.25, 1), filter 0.24s ease;
+  user-select: none;
+}
+
+.tomo2-cutout-slot:hover .tomo2-cutout-only-img {
+  transform: scale(1.08) translateY(-3px);
+  filter: drop-shadow(0 8px 18px rgba(187, 134, 82, 0.5));
+}
+
+.tomo2-cutout-slot:active .tomo2-cutout-only-img {
+  transform: scale(0.96);
+}
+
+.tomo2-cutout-img-wrapper.selected .tomo2-cutout-only-img {
+  filter: drop-shadow(0 0 8px #d4a373) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.4));
+  transform: scale(1.04);
+}
+
+/* Pliego de Selección Completa en Tomo II */
+.tomo2-complete-page-layout {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 2;
+}
+
+.tomo2-completion-box {
+  background: #fbf6ec;
+  border: 1.5px solid #d4a373;
+  border-radius: 8px;
+  padding: 24px 20px;
+  text-align: center;
+  margin: auto 0;
+  box-shadow: 0 6px 18px rgba(187, 134, 82, 0.15);
+}
+
+.tomo2-completion-badge {
+  display: inline-block;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #2e6638;
+  background: #e4f4e7;
+  padding: 4px 12px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+
+.tomo2-completion-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.55rem;
+  font-weight: 600;
+  color: #241c16;
+  margin: 0 0 8px 0;
+}
+
+.tomo2-completion-desc {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: #6d5e4f;
+  margin: 0;
+}
+
+.tomo2-chosen-summary {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: auto 0;
+  width: 100%;
+}
+
+.tomo2-summary-lead {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #8c7356;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.tomo2-chosen-list {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.tomo2-chosen-thumb-card {
+  background: #ffffff;
+  border: 1px solid #dcd1c2;
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.tomo2-chosen-thumb-card img {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  margin-bottom: 4px;
+}
+
+.tomo2-chosen-thumb-card span {
+  font-size: 0.68rem;
+  color: #3b3026;
+  font-weight: 600;
+}
+
+.tomo2-to-camera-btn {
+  background: linear-gradient(135deg, #d4a373 0%, #bb8652 100%);
+  color: #1a1410;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 24px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(187, 134, 82, 0.35);
+  transition: all 0.2s ease;
+}
+
+.tomo2-to-camera-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 18px rgba(187, 134, 82, 0.45);
+}
+
+/* ==========================================================================
+   CHASIS TRASERO DE LA CÁMARA (PARTE POSTERIOR DEL RIG 3D)
+   ========================================================================== */
+
+.camera-chassis {
+  width: 100%;
+  height: 100%;
+  background: #1b1e22;
+  background-image: 
+    radial-gradient(circle at 50% 0%, #2f343d 0%, #15171a 80%),
+    linear-gradient(90deg, #111 0%, transparent 10%, transparent 90%, #111 100%);
+  border-radius: 16px;
+  border: 2px solid #363b44;
+  box-shadow: 
+    0 35px 80px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.8);
+  padding: 14px 18px 12px 18px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+/* Placa superior con visor óptico y marca centrada */
+.chassis-topbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px 8px 10px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+  min-height: 44px;
+}
+
+@keyframes viewfinderGlowPulse {
+  0%, 100% {
+    box-shadow: 0 0 4px rgba(223, 183, 108, 0.2), inset 0 2px 5px rgba(0, 0, 0, 0.8);
+    border-color: #383d47;
+  }
+  50% {
+    box-shadow: 0 0 8px rgba(223, 183, 108, 0.4), 0 0 14px rgba(229, 193, 88, 0.22), inset 0 2px 5px rgba(0, 0, 0, 0.5);
+    border-color: #4a515e;
+  }
+}
+
+.optical-viewfinder-box {
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 64px;
+  height: 38px;
+  background: #0d0f12;
+  border: 1.5px solid #383d47;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.8);
+  cursor: pointer;
+  animation: viewfinderGlowPulse 2.4s infinite ease-in-out;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+  z-index: 5;
+}
+
+.optical-viewfinder-box:hover {
+  transform: translateY(-50%) scale(1.06);
+  border-color: #5b6475;
+}
+
+.optical-viewfinder-box:active {
+  transform: translateY(-50%) scale(0.96);
+}
+
+.viewfinder-window-glass {
+  width: 50px;
+  height: 26px;
+  background: radial-gradient(circle, #29465b 0%, #101c24 100%);
+  border: 1px solid #639bbd;
+  border-radius: 2px;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.chassis-brand-mark {
+  font-family: 'Plus Jakarta Sans', monospace;
+  font-size: 0.92rem;
+  letter-spacing: 0.26em;
+  color: #a4adba;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+}
+
+/* Pantalla LCD Central y Columna Derecha con Rueda de Luz */
+.chassis-main-body {
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+}
+
+.rear-screen-bezel {
+  flex: 1;
+  background: #0c0d10;
+  border: 4px solid #282c34;
+  border-radius: 8px;
+  padding: 6px;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.rear-screen-viewport {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  min-height: 280px;
+  background: #111;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.7);
+}
+
+.screen-landscape-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.screen-landscape-layer img,
+.screen-landscape-layer svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.screen-cutouts-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.screen-cutouts-layer .placed-cutout,
+.fs-cutouts-layer .placed-cutout {
+  position: absolute;
+  pointer-events: none;
+  filter: drop-shadow(2px 4px 8px rgba(0, 0, 0, 0.85));
+}
+
+/* Capa de sobreimpresión fotográfica desplazada por la rueda - Opacidad 50% */
+.screen-overprint-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 3;
+  overflow: hidden;
+  opacity: 0.5 !important;
+  mix-blend-mode: screen;
+}
+
+.overprint-canvas-track {
+  width: 100%;
+  height: 220%;
+  position: absolute;
+  top: -60%;
+  left: 0;
+  will-change: transform;
+  transition: transform 0.04s linear;
+}
+
+.overprint-canvas-track svg,
+.overprint-canvas-track img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Retícula y visor */
+.screen-viewfinder-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.grid-cross-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  transform: translate(-50%, -50%);
+}
+
+.grid-cross-center::before,
+.grid-cross-center::after {
+  content: '';
+  position: absolute;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.grid-cross-center::before {
+  top: 11px;
+  left: 0;
+  width: 24px;
+  height: 2px;
+}
+
+.grid-cross-center::after {
+  top: 0;
+  left: 11px;
+  width: 2px;
+  height: 24px;
+}
+
+.grid-crop-corner {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.crop-tl { top: 16px; left: 16px; border-right: none; border-bottom: none; }
+.crop-tr { top: 16px; right: 16px; border-left: none; border-bottom: none; }
+.crop-bl { bottom: 16px; left: 16px; border-right: none; border-top: none; }
+.crop-br { bottom: 16px; right: 16px; border-left: none; border-top: none; }
+
+/* LADO DERECHO: Panel de control físico con Disparador Arriba y Rueda de Exposición */
+.chassis-side-column {
+  width: 96px;
+  background: #14171a;
+  border-radius: 8px;
+  border: 1px solid #2d313a;
+  padding: 10px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7);
+  flex-shrink: 0;
+}
+
+.chassis-side-shutter-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.chassis-exposure-section {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  flex: 1;
+}
+
+.exposure-legend {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  height: 190px;
+  padding: 2px 0;
+  user-select: none;
+}
+
+.exposure-arrow {
+  color: #8c95a3;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.exposure-arrow:hover {
+  color: #fb8500;
+  transform: scale(1.25);
+}
+
+.exposure-arrow:active {
+  transform: scale(0.95);
+}
+
+.exposure-text {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  color: #8c95a3;
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.physical-light-wheel {
+  position: relative;
+  right: -24px;
+  width: 48px;
+  height: 184px;
+  background: #0d0f12;
+  border-radius: 6px 14px 14px 6px;
+  border: 2px solid #3d434f;
+  border-left: 2px solid #23272e;
+  box-shadow: 
+    4px 0 14px rgba(0, 0, 0, 0.85),
+    inset 0 12px 18px rgba(0, 0, 0, 0.95),
+    inset 0 -12px 18px rgba(0, 0, 0, 0.95);
+  overflow: hidden;
+  cursor: ns-resize;
+  touch-action: none;
+  z-index: 10;
+}
+
+.wheel-cylinder-barrel {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  padding: 4px 0;
+  background: repeating-linear-gradient(
+    180deg,
+    #5a616d 0px,
+    #7a8393 4px,
+    #2c3038 6px,
+    #181a1f 14px
+  );
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+  will-change: background-position;
+}
+
+.wheel-rib {
+  width: 80%;
+  margin: 0 auto;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 1px;
+}
+
+.side-shutter-button {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #e6eaf0 0%, #9ba3af 60%, #585e68 100%);
+  border: 2px solid #202328;
+  box-shadow: 
+    0 4px 10px rgba(0, 0, 0, 0.7),
+    inset 0 2px 2px rgba(255, 255, 255, 0.8),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s ease, box-shadow 0.15s ease;
+}
+
+.side-shutter-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 14px rgba(255, 51, 51, 0.5), 0 4px 10px rgba(0, 0, 0, 0.7);
+}
+
+.side-shutter-button:active {
+  transform: scale(0.92) translateY(2px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(0, 0, 0, 0.6);
+}
+
+.shutter-core-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ff3333;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.6), 0 0 6px rgba(255, 51, 51, 0.6);
+}
+
+.side-shutter-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+  color: #ff5555;
+  text-transform: uppercase;
+}
+
+/* ==========================================================================
+   VISOR ÓPTICO EN PANTALLA COMPLETA (#viewfinderFullscreen)
+   ========================================================================== */
+
+.viewfinder-fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 220;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+.viewfinder-fullscreen-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.fs-viewfinder-scene,
+.viewfinder-fullscreen-viewport {
+  position: absolute;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.fs-landscape-layer,
+.fs-cutouts-layer,
+.fs-overprint-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.fs-landscape-layer img,
+.fs-landscape-layer svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fs-cutouts-layer {
+  pointer-events: none;
+  z-index: 2;
+}
+
+.fs-overprint-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  overflow: hidden;
+  opacity: 0.5 !important;
+  mix-blend-mode: screen;
+}
+
+.fs-overprint-track {
+  width: 100%;
+  height: 220%;
+  position: absolute;
+  top: -60%;
+  left: 0;
+  will-change: transform;
+  transition: transform 0.04s linear;
+}
+
+.fs-overprint-track img,
+.fs-overprint-track svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fs-viewfinder-mask {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.85);
+}
+
+.viewfinder-fs-controls {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.fs-viewfinder-hud {
+  position: absolute;
+  top: 24px;
+  left: 28px;
+  right: 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.fs-hud-tag {
+  font-family: monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  color: #6edff6;
+  background: rgba(0, 0, 0, 0.65);
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(110, 223, 246, 0.4);
+}
+
+
+
+.fs-shutter-wrap {
+  position: absolute;
+  bottom: 30px;
+  right: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: 25;
+  pointer-events: auto;
+}
+
+/* ==========================================================================
+   FOTOGRAFÍA FÍSICA QUE CAE SOBRE LA MESA (#droppedPhotoStage)
+   ========================================================================== */
+
+.dropped-photo-stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 410px;
+  max-width: 84vw;
+  z-index: 150;
+  perspective: 1400px;
+  display: none;
+}
+
+.dropped-photo-stage.active {
+  display: block;
+}
+
+.dropped-photo-stage.flying-to-tomo3 {
+  animation: flyPhotoToTomo3 1.1s cubic-bezier(0.22, 0.85, 0.32, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes flyPhotoToTomo3 {
+  0% {
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+  35% {
+    /* Vuela sobre la pila situando su borde inferior en contacto con el borde superior del Tomo 3 */
+    transform: translate(calc(-50% + var(--desk-offset-x) + 20px), calc(-50% + var(--desk-offset-y) - 256px)) scale(0.65) rotate(0deg);
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+  68% {
+    /* Desciende ingresando al Tomo 3; se recorta con precisión en la línea del borde superior */
+    transform: translate(calc(-50% + var(--desk-offset-x) + 20px), calc(-50% + var(--desk-offset-y) - 178px)) scale(0.65) rotate(0deg);
+    opacity: 0.95;
+    clip-path: inset(0 0 50% 0);
+  }
+  100% {
+    /* Deslizada completamente adentro del libro entre sus páginas */
+    transform: translate(calc(-50% + var(--desk-offset-x) + 20px), calc(-50% + var(--desk-offset-y) - 100px)) scale(0.65) rotate(0deg);
+    opacity: 0;
+    clip-path: inset(0 0 100% 0);
+  }
+}
+
+.dropped-photo-card {
+  width: 100%;
+  aspect-ratio: 480 / 282;
+  height: auto;
+  background: transparent;
+  padding: 0;
+  border-radius: 6px;
+  box-shadow: none;
+  cursor: pointer;
+  position: relative;
+  animation: photoDropInDesk 0.85s cubic-bezier(0.25, 1, 0.35, 1) forwards;
+}
+
+@keyframes photoDropInDesk {
+  0% {
+    opacity: 0;
+    transform: translateY(-260px) rotate(-18deg) scale(1.25);
+  }
+  65% {
+    transform: translateY(12px) rotate(4deg) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotate(2deg) scale(1);
+  }
+}
+
+.dropped-photo-flipper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.65s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
+.dropped-photo-flipper.flipped {
+  transform: rotateY(180deg);
+}
+
+.dropped-photo-face,
+.photo-card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 6px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65), 0 4px 12px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.dropped-photo-front,
+.photo-card-front {
+  background: #ffffff;
+  padding: 12px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.dropped-photo-image-wrap,
+.photo-card-media-wrap {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #111;
+  border-radius: 3px;
+  position: relative;
+}
+
+.dropped-photo-image-wrap img,
+.photo-card-media-wrap img {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+}
+
+.dropped-photo-front-hint,
+.photo-card-front-hint {
+  font-size: 0.68rem;
+  color: #777;
+  text-align: center;
+  margin-top: 10px;
+  letter-spacing: 0.05em;
+  font-style: italic;
+}
+
+.dropped-photo-back,
+.photo-card-back {
+  background: #faf6ee;
+  transform: rotateY(180deg);
+  border: 1px solid #d8cfc0;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: default;
+}
+
+.photo-card-front {
+  cursor: pointer;
+}
+
+.card-text-input,
+.card-textarea {
+  cursor: text;
+}
+
+.photo-card-back-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+}
+
+.photo-back-header,
+.card-back-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px dashed #c4b9a7;
+  padding-bottom: 8px;
+}
+
+.photo-back-postcard-stamp,
+.card-back-stamp {
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  color: #7b6f60;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.card-back-id {
+  font-family: monospace;
+  font-size: 0.62rem;
+  color: #9d8e7d;
+  letter-spacing: 0.1em;
+}
+
+.photo-back-flip-btn {
+  background: none;
+  border: none;
+  color: #948675;
+  font-size: 0.68rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.photo-back-flip-btn:hover {
+  color: #333;
+}
+
+.photo-back-form,
+.card-back-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 4px 0;
+}
+
+.photo-form-field,
+.card-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.photo-form-field label,
+.card-field-label {
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #6a5e4f;
+  font-weight: 600;
+}
+
+.photo-form-field input,
+.card-text-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #9d8e7d;
+  padding: 2px 2px;
+  font-family: 'Caveat', 'Playfair Display', cursive, serif;
+  font-size: 1rem;
+  color: #1a1612;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.photo-form-field input:focus,
+.card-text-input:focus {
+  border-bottom-color: #2b241c;
+}
+
+.card-textarea {
+  resize: none;
+  height: 40px;
+  line-height: 1.25;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.photo-back-actions,
+.card-back-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.photo-save-btn,
+.save-to-tomo3-btn {
+  background: #46225e;
+  border: 1px solid #62377e;
+  color: #f1e6ff;
+  padding: 7px 14px;
+  border-radius: 4px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.save-to-tomo3-btn.check-icon-btn {
+  background: #ded3c1;
+  border: 1.5px solid #c4b6a1;
+  color: #3b3124;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.save-to-tomo3-btn.check-icon-btn:hover {
+  background: #cfc0ab;
+  border-color: #a8967f;
+  transform: scale(1.08);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.22);
+}
+
+.save-to-tomo3-btn.check-icon-btn:active {
+  transform: scale(0.96);
+}
+
+.photo-save-btn:hover,
+.save-to-tomo3-btn:not(.check-icon-btn):hover {
+  background: #5b2d7a;
+  transform: scale(1.03);
+}
+
+/* ==========================================================================
+   TOMO III - FÍSICO 3D EN LA MESA (#tomo3BookWrapper)
+   ========================================================================== */
+
+.tomo-3-book.state-stacked {
+  transform: translate(calc(-50% + var(--desk-offset-x) + 20px), calc(-50% + var(--desk-offset-y) + 16px)) rotate(0deg) scale(0.76);
+  z-index: 10;
+  pointer-events: none;
+  cursor: default;
+}
+
+.tomo-3-book.state-stacked.unlocked {
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.tomo-3-book.state-stacked.unlocked:hover {
+  transform: translate(calc(-50% + var(--desk-offset-x) + 20px), calc(-50% + var(--desk-offset-y) + 8px)) rotate(0deg) scale(0.78);
+  z-index: 12;
+}
+
+.tomo-3-book.state-open {
+  width: var(--book-open-w);
+  height: var(--book-open-h);
+  transform: translate(-50%, -50%) rotate(0deg) scale(1);
+  z-index: 70;
+  overflow: visible;
+}
+
+.tomo-3-book.state-open .book-3d {
+  box-shadow: var(--shadow-elevated);
+  overflow: visible;
+}
+
+.tomo-3-book.state-closed-left {
+  width: var(--book-w);
+  height: var(--book-h);
+  transform: translate(calc(-50% - var(--desk-offset-x)), calc(-50% + var(--desk-offset-y))) rotate(-6deg) scale(0.76);
+  z-index: 26;
+}
+
+.tomo-3-book.state-closed-left .book-3d {
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.35);
+  transform: rotateY(180deg);
+}
+
+.tomo-3-cover {
+  background: linear-gradient(135deg, #62377e 0%, #46225e 100%);
+  border-left: 12px solid #36174a;
+}
+
+.tomo-3-cover .cover-title {
+  font-size: 1.62rem;
+  line-height: 1.22;
+}
+
+.tomo-3-interior .frontispiece-title {
+  font-size: 1.55rem;
+}
+
+.tomo-3-interior {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+/* Asegurar que las páginas del Tomo III tengan fondo sólido de papel y textura 100% */
+.tomo-3-interior .page-paper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--book-paper-bg);
+  box-sizing: border-box;
+}
+
+.tomo-3-book .flipping-leaf {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  height: 100%;
+  width: 50%;
+  left: 50%;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 30;
+  will-change: transform;
+}
+
+.flipping-leaf.active,
+.tomo-3-book .flipping-leaf.active,
+.tomo-3-book .flipping-leaf.animate-forward,
+.tomo-3-book .flipping-leaf.animate-backward,
+.tomo-3-book .flipping-leaf.turning-dragging,
+.tomo-3-book .flipping-leaf.turning-smooth {
+  opacity: 1 !important;
+}
+
+.tomo-3-book .flipping-leaf .leaf-face {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  overflow: hidden !important;
+  background-color: var(--book-paper-bg) !important;
+  box-sizing: border-box !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+}
+
+.tomo-3-book .flipping-leaf .leaf-front {
+  transform: rotateY(0deg);
+  z-index: 2;
+  border-radius: 0 3px 3px 0 !important;
+}
+
+.tomo-3-book .flipping-leaf .leaf-back {
+  transform: rotateY(180deg) !important;
+  z-index: 1;
+  border-radius: 3px 0 0 3px !important;
+}
+
+/* Homologación milimétrica de paddings para que las páginas y hojas móviles sean 100% estables */
+.tomo-3-interior .spread-left-half .page-paper,
+.tomo-3-book .leaf-back {
+  padding: 26px 24px 20px 52px !important;
+}
+
+.tomo-3-interior .spread-right-half .page-paper,
+.tomo-3-book .leaf-front {
+  padding: 26px 52px 20px 24px !important;
+}
+
+.tomo-3-book .frontispiece-right {
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Páginas del Tomo III */
+.tomo3-page-layout {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 2;
+}
+
+.tomo3-page-layout.empty-page {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.empty-page-placeholder {
+  flex: 1;
+  width: 100%;
+  min-height: 200px;
+}
+
+.tomo3-page-meta-header {
+  width: 100%;
+  text-align: right;
+  margin-bottom: 2px;
+  flex-shrink: 0;
+}
+
+.tomo3-page-meta-date {
+  font-family: 'Caveat', 'Playfair Display', cursive, serif;
+  font-size: 0.95rem;
+  color: #7b6f60;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+
+.tomo3-entry-section {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.tomo3-title-section {
+  text-align: left;
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+
+.tomo3-title-section .tomo3-field-lead {
+  display: block;
+  margin-bottom: 2px;
+  color: #8c7f6f;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.tomo3-page-photo-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.28rem;
+  color: #1a1714;
+  font-weight: 600;
+  text-align: left;
+  letter-spacing: 0.02em;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.tomo3-page-photo-container {
+  width: 100%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0 6px 0;
+}
+
+.tomo3-author-section {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 4px;
+  margin-bottom: 12px;
+  text-align: left;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.tomo3-author-section .tomo3-field-lead,
+.tomo3-observations-section .tomo3-field-lead {
+  display: inline-block;
+  margin-bottom: 0;
+  flex-shrink: 0;
+  color: #8c7f6f;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.tomo3-observations-section {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 0;
+  margin-bottom: 8px;
+  text-align: left;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.tomo3-page-photo-observations {
+  font-family: 'Caveat', 'Playfair Display', cursive, serif;
+  font-size: 1.25rem;
+  color: #1a1714;
+  line-height: 1.30;
+  text-align: left;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-height: 4.1em;
+}
+
+.tomo3-page-layout .folio-left,
+.tomo3-page-layout .folio-right {
+  margin-top: auto;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: 6px;
+  flex-shrink: 0;
+}
+
+.tomo3-field-lead {
+  display: block;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.60rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: #8c7f6f;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.tomo3-page-photo-frame {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #ffffff;
+  padding: 8px;
+  border-radius: 4px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.tomo3-page-photo-frame img {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+  border-radius: 2px;
+}
+
+/* Estilos de la fotografía compuesta dentro del marco y en la tarjeta que cae */
+.composite-photo-media {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 2px;
+  overflow: hidden;
+  background: #111315;
+}
+
+.composite-photo-media .composite-photo-landscape {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+}
+
+.composite-photo-media .composite-photo-landscape img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.composite-photo-media .composite-photo-cutouts {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.composite-photo-media .composite-photo-cutouts .placed-cutout {
+  position: absolute;
+  pointer-events: none;
+  filter: drop-shadow(2px 4px 8px rgba(0, 0, 0, 0.85));
+}
+
+.composite-photo-media .composite-photo-overprint {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 3;
+  overflow: hidden;
+  opacity: 0.5 !important;
+  mix-blend-mode: screen;
+}
+
+.composite-photo-media .composite-photo-overprint .overprint-canvas-track {
+  width: 100%;
+  height: 220%;
+  position: absolute;
+  top: -60%;
+  left: 0;
+}
+
+.composite-photo-media .composite-photo-overprint .overprint-canvas-track svg,
+.composite-photo-media .composite-photo-overprint .overprint-canvas-track img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.tomo3-page-photo-author {
+  font-family: 'Caveat', 'Playfair Display', cursive, serif;
+  font-size: 1.35rem;
+  color: #1a1714;
+  text-align: right;
+  padding-right: 8px;
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* Portadilla Tomo III */
+.tomo3-portadilla-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.8rem;
+  color: #2b2723;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.tomo3-portadilla-sub {
+  font-size: 0.88rem;
+  color: #6d645a;
+  text-align: center;
+  font-style: italic;
+}
+
+.tomo3-quote-box {
+  max-width: 82%;
+  margin: auto;
+  text-align: center;
+}
+
+.tomo3-quote-text {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.3rem;
+  line-height: 1.6;
+  color: #2b2723;
+  font-style: italic;
+  margin-bottom: 14px;
+}
+
+.tomo3-quote-author {
+  font-size: 0.85rem;
+  letter-spacing: 0.15em;
+  color: #7b7066;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* Flash óptico general */
+.camera-flash-overlay {
+  position: fixed;
+  inset: 0;
+  background: #ffffff;
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.5s ease-out;
+}
+
+.camera-flash-overlay.flash-active {
+  opacity: 0.96;
+  transition: none;
+}
+
+@media (max-width: 768px) {
+  .tomo2-page-cutouts-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  .tomo2-cutout-figure-preview {
+    height: 60px;
+  }
+  .tomo2-cutout-figure-preview svg {
+    max-height: 56px;
+  }
+  .rear-screen-viewport {
+    height: 240px;
+  }
+  .physical-light-wheel {
+    height: 160px;
+  }
+  .chassis-wheel-column {
+    width: 60px;
+  }
+  .camera-chassis {
+    padding: 12px;
+  }
+}
+
+/* ==========================================================================
+   BOTÓN FLOTANTE DE PANTALLA COMPLETA EN LA MESA
+   ========================================================================== */
+
+.desk-fullscreen-btn {
+  position: absolute;
+  top: 24px;
+  left: 28px;
+  z-index: 80;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: rgba(20, 16, 12, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #e5dfd5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: background 0.25s ease, border-color 0.25s ease, transform 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.desk-fullscreen-btn:hover {
+  background: rgba(40, 32, 24, 0.85);
+  border-color: rgba(212, 163, 115, 0.5);
+  transform: scale(1.05);
+}
+
+.desk-fullscreen-btn:active {
+  transform: scale(0.95);
+}
+
+/* ==========================================================================
+   PANTALLA DE ORIENTACIÓN (GIRAR CELULAR Y PANTALLA COMPLETA)
+   ========================================================================== */
+
+.orientation-gate-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 6, 5, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.orientation-gate-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.orientation-gate-card {
+  width: 460px;
+  max-width: 90vw;
+  background: #181411;
+  background-image: radial-gradient(circle at 50% 10%, rgba(95, 68, 48, 0.35) 0%, rgba(14, 11, 9, 0.98) 100%);
+  border: 1px solid rgba(212, 163, 115, 0.28);
+  border-radius: 16px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(0, 0, 0, 0.5);
+  padding: 34px 28px;
+  text-align: center;
+  transform: translateY(16px) scale(0.96);
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
+.orientation-gate-overlay.visible .orientation-gate-card {
+  transform: translateY(0) scale(1);
+}
+
+.gate-state-portrait,
+.gate-state-ready {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Animación del teléfono girando de vertical a horizontal */
+.phone-rotate-anim-box {
+  position: relative;
+  width: 140px;
+  height: 120px;
+  margin-bottom: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.phone-rotate-device {
+  width: 52px;
+  height: 94px;
+  background: #252830;
+  border: 2px solid #5a6270;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7), inset 0 1px 2px rgba(255, 255, 255, 0.25);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 3px;
+  animation: phoneRotateLoop 3.2s infinite cubic-bezier(0.45, 0.05, 0.25, 0.95);
+  transform-origin: center center;
+}
+
+.phone-device-lens {
+  width: 5px;
+  height: 5px;
+  background: #111;
+  border-radius: 50%;
+  border: 0.5px solid #666;
+}
+
+.phone-device-screen {
+  width: 100%;
+  flex: 1;
+  background: #0d1217;
+  border-radius: 5px;
+  margin: 4px 0;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.phone-screen-artwork {
+  width: 75%;
+  height: 60%;
+  border: 1px dashed rgba(212, 163, 115, 0.4);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(212, 163, 115, 0.08);
+}
+
+.artwork-line {
+  width: 14px;
+  height: 2px;
+  background: #d4a373;
+}
+
+.phone-device-bar {
+  width: 18px;
+  height: 2.5px;
+  background: #6a7382;
+  border-radius: 2px;
+}
+
+.phone-rotate-arrow {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  color: var(--desk-accent);
+  opacity: 0.85;
+  animation: arrowPulse 3.2s infinite ease-in-out;
+}
+
+@keyframes phoneRotateLoop {
+  0%, 15% {
+    transform: rotate(0deg);
+  }
+  45%, 80% {
+    transform: rotate(-90deg);
+  }
+  95%, 100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes arrowPulse {
+  0%, 15% {
+    opacity: 0.25;
+    transform: scale(0.9);
+  }
+  40%, 75% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  95%, 100% {
+    opacity: 0.25;
+    transform: scale(0.9);
+  }
+}
+
+.gate-tag {
+  display: inline-block;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  font-weight: 700;
+  color: var(--desk-accent);
+  background: rgba(212, 163, 115, 0.12);
+  padding: 3px 10px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.gate-tag-ready {
+  display: inline-block;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  font-weight: 700;
+  color: #3fb950;
+  background: rgba(63, 185, 80, 0.12);
+  padding: 3px 10px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.gate-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.95rem;
+  font-weight: 500;
+  color: #f7ede2;
+  margin-bottom: 8px;
+}
+
+.gate-desc {
+  font-size: 0.88rem;
+  color: #b5aba0;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.gate-subhint {
+  font-size: 0.72rem;
+  color: #7b7266;
+  font-style: italic;
+}
+
+.gate-success-icon {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.gate-start-btn {
+  background: linear-gradient(135deg, #d4a373 0%, #bb8652 100%);
+  color: #120e0a;
+  border: none;
+  padding: 13px 28px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(212, 163, 115, 0.35), 0 2px 4px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  margin-top: 6px;
+}
+
+.gate-start-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(212, 163, 115, 0.5);
+  filter: brightness(1.08);
+}
+
+.gate-start-btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+/* ==========================================================================
+   ADAPTACIÓN PARA MÓVILES EN POSICIÓN HORIZONTAL (LANDSCAPE)
+   ========================================================================== */
+
+@media (max-height: 600px), (orientation: landscape) and (max-height: 650px) {
+  :root {
+    --book-w: clamp(160px, 23vw, 210px);
+    --book-h: clamp(220px, 72vh, 310px);
+    --book-open-w: clamp(330px, 86vw, 760px);
+    --book-open-h: clamp(220px, 82vh, 360px);
+    --desk-offset-x: 27vw;
+    --desk-offset-y: 10px;
+  }
+
+  .desk-fullscreen-btn {
+    top: 8px;
+    left: 10px;
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Redimensión precisa de la cámara sobre la mesa en móviles apaisados */
+  .camera-interactive-rig:not(.active) {
+    top: 8px;
+    right: 12px;
+    width: min(130px, 20vw);
+    height: min(92px, 20vh);
+  }
+
+  .camera-interactive-rig.active {
+    width: min(94vw, 640px);
+    height: min(92vh, 360px);
+  }
+
+  /* Ajuste armónico de tipografías para que no queden desproporcionadas en el celular */
+  .cover-title {
+    font-size: 1.25rem !important;
+    margin-bottom: 6px !important;
+  }
+
+  .cover-subtitle {
+    font-size: 0.68rem !important;
+  }
+
+  .volume-badge {
+    font-size: 0.68rem !important;
+  }
+
+  .cover-emboss-border {
+    margin: 8px !important;
+    padding: 14px 12px !important;
+    height: calc(100% - 16px) !important;
+  }
+
+  .page-paper {
+    padding: 12px 14px 10px 14px !important;
+  }
+
+  .spread-left-half .page-paper {
+    padding: 12px 12px 10px 24px !important;
+  }
+
+  .spread-right-half .page-paper {
+    padding: 12px 24px 10px 12px !important;
+  }
+
+  .entry-label-plain {
+    font-size: 0.62rem !important;
+    margin-bottom: 2px !important;
+  }
+
+  .entry-title-text {
+    font-size: 1.05rem !important;
+    margin-bottom: 2px !important;
+  }
+
+  .entry-date-sub {
+    font-size: 0.6rem !important;
+    margin-bottom: 4px !important;
+  }
+
+  .entry-narrative {
+    font-size: 0.72rem !important;
+    line-height: 1.34 !important;
+    max-height: 85px;
+    overflow-y: auto;
+  }
+
+  .frontispiece-title {
+    font-size: 1.22rem !important;
+  }
+
+  .frontispiece-subtitle {
+    font-size: 0.72rem !important;
+  }
+
+  .frontispiece-quote {
+    font-size: 0.76rem !important;
+    line-height: 1.32 !important;
+  }
+
+  .frontispiece-author {
+    font-size: 0.65rem !important;
+  }
+
+  .folio-left,
+  .folio-right {
+    font-size: 0.6rem !important;
+    padding-top: 4px !important;
+    margin-top: 4px !important;
+  }
+
+  /* Tomo 2 en celular */
+  .tomo2-floating-tracker {
+    top: -62px !important;
+    gap: 32px !important;
+  }
+
+  .tomo2-dashed-char-icon {
+    width: 38px !important;
+    height: 50px !important;
+  }
+
+  .tomo2-fixed-photos-grid {
+    gap: 8px !important;
+  }
+
+  /* Tomo 3 en celular */
+  .tomo3-page-photo-title {
+    font-size: 0.98rem !important;
+  }
+
+  .tomo-3-cover .cover-title {
+    font-size: 1.15rem !important;
+  }
+
+  .tomo3-field-lead {
+    font-size: 0.54rem !important;
+  }
+
+  .tomo3-page-photo-author,
+  .tomo3-page-photo-observations {
+    font-size: 0.72rem !important;
+  }
+
+  /* Contratapas e ISBN en celular */
+  .manifesto-quote {
+    font-size: 0.78rem !important;
+    line-height: 1.36 !important;
+    max-width: 92% !important;
+    margin-bottom: 10px !important;
+  }
+
+  .back-barcode-wrapper {
+    margin-top: 32px !important;
+  }
+
+  .barcode-lines {
+    width: 128px !important;
+    height: 20px !important;
+  }
+
+  .barcode-number {
+    font-size: 0.58rem !important;
+    letter-spacing: 0.12em !important;
+  }
+
+  /* Fotos en la mesa en celular */
+  .detached-photo-card {
+    width: min(340px, 45vw) !important;
+    padding: 6px !important;
+  }
+
+  .dropped-photo-card {
+    width: min(340px, 48vw) !important;
+    padding: 6px !important;
+  }
+
+  .photo-card-back {
+    padding: 10px 14px 8px 14px !important;
+  }
+
+  .card-text-input {
+    font-size: 0.85rem !important;
+    padding: 1px 2px !important;
+  }
+
+  .card-field-label {
+    font-size: 0.55rem !important;
+  }
+
+  .save-to-tomo3-btn.check-icon-btn {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  /* Controles de la cámara */
+  .camera-chassis {
+    max-height: 94vh;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+
+  .chassis-topbar {
+    padding-bottom: 4px;
+    margin-bottom: 6px;
+  }
+
+  .chassis-shutter-button {
+    width: 32px;
+    height: 32px;
+  }
+
+  .rear-screen-viewport {
+    height: 180px;
+  }
+
+  .physical-light-wheel {
+    height: 125px;
+    width: 34px;
+  }
+
+  .orientation-gate-card {
+    padding: 18px 20px;
+  }
+
+  .gate-title {
+    font-size: 1.3rem;
+  }
+
+  .gate-desc {
+    font-size: 0.74rem;
+    margin-bottom: 6px;
+  }
+
+  .gate-start-btn {
+    padding: 8px 16px;
+    font-size: 0.82rem;
+  }
+}
