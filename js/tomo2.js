@@ -752,7 +752,7 @@ window.Tomo2 = (function() {
       setTurning: (val) => { isTurning = val; },
       flipForward: flipForward,
       flipBackward: flipBackward,
-      excludeSelectors: ['.tomo2-cutout-slot', '.tomo2-floating-tracker', '.tomo2-dashed-char-icon']
+      excludeSelectors: ['.tomo2-floating-tracker']
     });
 
     function handleStackedClick(e) {

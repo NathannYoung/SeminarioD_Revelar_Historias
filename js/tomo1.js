@@ -201,9 +201,9 @@ window.Tomo1 = (function() {
       ${texHTML}
       <div class="entry-layout-left">
         <div class="entry-text-block">
+          <div class="entry-date-sub">${spread.date}</div>
           <div class="entry-label-plain">${spread.entryLabel}</div>
           <h2 class="entry-title-text">${spread.title}</h2>
-          <div class="entry-date-sub">${spread.date}</div>
           <p class="entry-narrative">${spread.text}</p>
         </div>
         <div class="folio-left">${spread.leftFolio}</div>
@@ -513,7 +513,7 @@ window.Tomo1 = (function() {
       setTurning: (val) => { isTurning = val; },
       flipForward: flipForward,
       flipBackward: flipBackward,
-      excludeSelectors: ['.photo-only-card']
+      excludeSelectors: []
     });
 
     function handleStackedClick(e) {

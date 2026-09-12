@@ -104,7 +104,7 @@ window.Tomo3 = (function() {
           <h3 class="tomo3-page-photo-title">${window.AppDesk.escapeHTML(photo.title)}</h3>
         </div>
         <div class="tomo3-page-photo-container">
-          <div class="tomo3-page-photo-frame">
+          <div class="tomo3-page-photo-frame" role="button" tabindex="0" data-photo-idx="${(idx - 1) * 2}" style="cursor: pointer;" title="Toca para ver en pantalla completa">
             ${window.Camara.renderCompositePhotoHTML(photo)}
           </div>
         </div>
@@ -178,7 +178,7 @@ window.Tomo3 = (function() {
           <h3 class="tomo3-page-photo-title">${window.AppDesk.escapeHTML(photo.title)}</h3>
         </div>
         <div class="tomo3-page-photo-container">
-          <div class="tomo3-page-photo-frame">
+          <div class="tomo3-page-photo-frame" role="button" tabindex="0" data-photo-idx="${photoIdx}" style="cursor: pointer;" title="Toca para ver en pantalla completa">
             ${window.Camara.renderCompositePhotoHTML(photo)}
           </div>
         </div>
@@ -195,6 +195,46 @@ window.Tomo3 = (function() {
     `;
   }
 
+  function openFullscreen(photoIdx) {
+    const photo = savedPhotos[photoIdx];
+    if (!photo) return;
+
+    const overlay = document.getElementById('tomo3PhotoFullscreen');
+    const mediaWrap = document.getElementById('tomo3FsMediaWrap');
+
+    if (mediaWrap) {
+      mediaWrap.innerHTML = window.Camara.renderCompositePhotoHTML(photo);
+    }
+
+    if (overlay) {
+      overlay.classList.add('active');
+    }
+  }
+
+  function closeFullscreen() {
+    const overlay = document.getElementById('tomo3PhotoFullscreen');
+    if (overlay) {
+      overlay.classList.remove('active');
+    }
+  }
+
+  function attachPhotoFullscreenClicks() {
+    const frames = [
+      ...(tomo3LeftPaperContent ? tomo3LeftPaperContent.querySelectorAll('.tomo3-page-photo-frame') : []),
+      ...(tomo3RightPaperContent ? tomo3RightPaperContent.querySelectorAll('.tomo3-page-photo-frame') : [])
+    ];
+
+    frames.forEach(frame => {
+      frame.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const pIdx = parseInt(frame.dataset.photoIdx, 10);
+        if (!isNaN(pIdx)) {
+          openFullscreen(pIdx);
+        }
+      });
+    });
+  }
+
   function renderSpread(index) {
     if (tomo3LeftPaperContent) {
       tomo3LeftPaperContent.innerHTML = getLeftHTML(index);
@@ -202,6 +242,7 @@ window.Tomo3 = (function() {
     if (tomo3RightPaperContent) {
       tomo3RightPaperContent.innerHTML = getRightHTML(index);
     }
+    attachPhotoFullscreenClicks();
   }
 
   let isTransitioning = false;
@@ -456,6 +497,23 @@ window.Tomo3 = (function() {
         }
       });
     }
+
+    const fsOverlay = document.getElementById('tomo3PhotoFullscreen');
+    if (fsOverlay) {
+      fsOverlay.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeFullscreen();
+      });
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const overlay = document.getElementById('tomo3PhotoFullscreen');
+        if (overlay && overlay.classList.contains('active')) {
+          closeFullscreen();
+        }
+      }
+    });
 
     renderSpread(0);
   }

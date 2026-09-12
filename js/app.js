@@ -71,7 +71,7 @@ window.AppDesk = {
     `;
   },
 
-  // Controlador universal de interacción física 3D: Arrastre (Drag) y Clic para pasar páginas
+  // Controlador universal de interacción física 3D: Arrastre (Drag) y Swipe táctil para pasar páginas
   initInteractiveBookDrag: function({
     container,
     leftContent,
@@ -98,7 +98,10 @@ window.AppDesk = {
     let dragDirection = null; // 'forward' | 'backward'
     let startX = 0;
     let startY = 0;
+    let startTime = 0;
     let currentProgress = 0;
+    let activePointerId = null;
+    let suppressClickUntil = 0;
 
     function onPointerDown(e) {
       if (!isBookOpen() || isTurning()) return;
@@ -107,23 +110,13 @@ window.AppDesk = {
         if (e.target.closest(sel)) return;
       }
 
-      const rect = container.getBoundingClientRect();
       startX = e.clientX;
       startY = e.clientY;
-      const relX = startX - rect.left;
-      const halfW = rect.width / 2;
-      const curIdx = getSpreadIndex();
-      const maxIdx = getMaxSpreadIndex();
-
-      if (relX >= halfW) {
-        if (curIdx >= maxIdx) return;
-        dragDirection = 'forward';
-      } else {
-        if (curIdx <= 0) return;
-        dragDirection = 'backward';
-      }
-
+      startTime = Date.now();
+      activePointerId = e.pointerId;
       isDragging = false;
+      dragDirection = null;
+      currentProgress = 0;
     }
 
     function setupVisuals(direction) {
@@ -136,9 +129,11 @@ window.AppDesk = {
         leafFront.innerHTML = getRightHTML(curIdx);
         leafBack.innerHTML = getLeftHTML(nextIdx);
 
-        underLeafShadow.className = 'under-leaf-shadow shadow-right';
-        underLeafShadow.style.opacity = '0';
-        underLeafShadow.style.transition = 'none';
+        if (underLeafShadow) {
+          underLeafShadow.className = 'under-leaf-shadow shadow-right';
+          underLeafShadow.style.opacity = '0';
+          underLeafShadow.style.transition = 'none';
+        }
 
         leaf.className = 'flipping-leaf active turning-dragging';
         leaf.style.transform = 'rotateY(0deg)';
@@ -149,9 +144,11 @@ window.AppDesk = {
         leafFront.innerHTML = getRightHTML(prevIdx);
         leafBack.innerHTML = getLeftHTML(curIdx);
 
-        underLeafShadow.className = 'under-leaf-shadow shadow-left';
-        underLeafShadow.style.opacity = '0';
-        underLeafShadow.style.transition = 'none';
+        if (underLeafShadow) {
+          underLeafShadow.className = 'under-leaf-shadow shadow-left';
+          underLeafShadow.style.opacity = '0';
+          underLeafShadow.style.transition = 'none';
+        }
 
         leaf.className = 'flipping-leaf active turning-dragging';
         leaf.style.transform = 'rotateY(-180deg)';
@@ -160,22 +157,45 @@ window.AppDesk = {
     }
 
     function onPointerMove(e) {
-      if (!dragDirection) return;
+      if (activePointerId === null || (e.pointerId !== undefined && e.pointerId !== activePointerId)) return;
+      if (!isBookOpen()) return;
 
       const deltaX = e.clientX - startX;
       const deltaY = e.clientY - startY;
+      const absX = Math.abs(deltaX);
+      const absY = Math.abs(deltaY);
 
       if (!isDragging) {
-        if (Math.abs(deltaX) > 8 && Math.abs(deltaX) > Math.abs(deltaY) * 0.7) {
+        // Umbral de activación del arrastre horizontal
+        if (absX > 8 && absX > absY * 0.45) {
+          const curIdx = getSpreadIndex();
+          const maxIdx = getMaxSpreadIndex();
+
+          if (deltaX < 0 && curIdx < maxIdx) {
+            dragDirection = 'forward';
+          } else if (deltaX > 0 && curIdx > 0) {
+            dragDirection = 'backward';
+          } else {
+            return;
+          }
+
           isDragging = true;
           setupVisuals(dragDirection);
+
+          try {
+            container.setPointerCapture(activePointerId);
+          } catch (err) {}
         } else {
           return;
         }
       }
 
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+
       const rect = container.getBoundingClientRect();
-      const halfW = rect.width / 2;
+      const halfW = Math.max(rect.width / 2, 160);
 
       let angle = 0;
       if (dragDirection === 'forward') {
@@ -200,14 +220,14 @@ window.AppDesk = {
       leaf.classList.remove('turning-dragging');
       leaf.classList.add('turning-smooth');
       leaf.style.transition = 'transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)';
-      underLeafShadow.style.transition = 'opacity 0.35s ease';
+      if (underLeafShadow) underLeafShadow.style.transition = 'opacity 0.35s ease';
 
       const targetAngle = direction === 'forward'
         ? (shouldComplete ? -180 : 0)
         : (shouldComplete ? 0 : -180);
 
       leaf.style.transform = `rotateY(${targetAngle}deg)`;
-      underLeafShadow.style.opacity = '0';
+      if (underLeafShadow) underLeafShadow.style.opacity = '0';
 
       setTimeout(() => {
         const curIdx = getSpreadIndex();
@@ -221,19 +241,37 @@ window.AppDesk = {
         leaf.className = 'flipping-leaf';
         leaf.style.transform = '';
         leaf.style.transition = '';
-        underLeafShadow.className = 'under-leaf-shadow';
-        underLeafShadow.style.opacity = '0';
-        underLeafShadow.style.transition = '';
+        if (underLeafShadow) {
+          underLeafShadow.className = 'under-leaf-shadow';
+          underLeafShadow.style.opacity = '0';
+          underLeafShadow.style.transition = '';
+        }
         setTurning(false);
       }, 420);
     }
 
     function onPointerUp(e) {
-      if (!dragDirection) return;
+      if (activePointerId === null || (e.pointerId !== undefined && e.pointerId !== activePointerId)) return;
 
-      if (isDragging) {
-        const shouldComplete = currentProgress > 0.28;
+      const elapsed = Date.now() - startTime;
+      const deltaX = e.clientX - startX;
+      const absX = Math.abs(deltaX);
+
+      if (isDragging && dragDirection) {
+        // Deslizamiento rápido en celulares (quick swipe) o arrastre superando el 18% del ancho
+        const isQuickSwipe = elapsed < 380 && absX > 22;
+        const shouldComplete = currentProgress > 0.18 || isQuickSwipe;
         finishTurn(dragDirection, shouldComplete);
+        suppressClickUntil = Date.now() + 300;
+      }
+      // NOTA: Si no hubo arrastre (isDragging === false), NO se pasa de página.
+      // Se eliminó el cambio de página por simple clic según lo solicitado.
+
+      if (activePointerId !== null) {
+        try {
+          container.releasePointerCapture(activePointerId);
+        } catch (err) {}
+        activePointerId = null;
       }
 
       dragDirection = null;
@@ -241,14 +279,33 @@ window.AppDesk = {
       currentProgress = 0;
     }
 
-    container.addEventListener('pointerdown', onPointerDown);
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', onPointerUp);
-    window.addEventListener('pointercancel', () => {
-      if (isDragging) finishTurn(dragDirection, false);
+    function onPointerCancel(e) {
+      if (isDragging && dragDirection) {
+        finishTurn(dragDirection, false);
+      }
+      if (activePointerId !== null) {
+        try {
+          container.releasePointerCapture(activePointerId);
+        } catch (err) {}
+        activePointerId = null;
+      }
       dragDirection = null;
       isDragging = false;
-    });
+      currentProgress = 0;
+    }
+
+    // Interceptar clics residuales generados al soltar el dedo tras arrastrar
+    container.addEventListener('click', (e) => {
+      if (Date.now() < suppressClickUntil) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+    }, true);
+
+    container.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointermove', onPointerMove, { passive: false });
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerCancel);
   },
 
   // Reinicia la experiencia al estado inicial con ambos libros en la pila y cámara bloqueada
@@ -335,6 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
           e.target.closest('#camera') ||
           e.target.closest('#cameraBackdropDim') ||
           e.target.closest('#viewfinderFullscreen') ||
+          e.target.closest('#tomo3PhotoFullscreen') ||
           e.target.closest('#deskFullscreenBtn')) {
         return;
       }
@@ -367,6 +425,11 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('keydown', (e) => {
     const STATES = window.AppDesk.STATES;
     if (e.key === 'Escape') {
+      const fsTomo3 = document.getElementById('tomo3PhotoFullscreen');
+      if (fsTomo3 && fsTomo3.classList.contains('active')) {
+        fsTomo3.classList.remove('active');
+        return;
+      }
       const fsView = document.getElementById('viewfinderFullscreen');
       if (fsView && fsView.classList.contains('active')) {
         window.Camara.closeFullscreenViewfinder();
