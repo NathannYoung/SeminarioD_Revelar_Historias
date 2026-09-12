@@ -3862,13 +3862,13 @@ html, body {
 
 @media (max-height: 600px), (orientation: landscape) and (max-height: 650px) {
   :root {
-    /* Altura y anchura con ratio vertical auténtico de libro (un poco más grandes para mejor proporción y espacio editorial) */
-    --book-open-h: clamp(215px, 68vh, 280px);
+    /* Altura y anchura con ratio vertical auténtico de libro (página aprox 1:1.37, libro abierto aprox 1.46:1) */
+    --book-open-h: clamp(195px, 64vh, 255px);
     --book-open-w: calc(var(--book-open-h) * 1.46);
     --book-w: calc(var(--book-open-w) / 2);
     --book-h: var(--book-open-h);
-    /* Posición de las pilas a los lados despegadas de los bordes y del centro */
-    --desk-offset-x: clamp(185px, 28vw, 245px);
+    /* Posición de las pilas a los lados despegadas de los bordes de pantalla */
+    --desk-offset-x: clamp(160px, 26vw, 220px);
     --desk-offset-y: clamp(6px, 2vh, 16px);
   }
 
@@ -4303,9 +4303,9 @@ html, body {
   }
 
   .back-content {
-    margin: 6px !important;
-    padding: 8px 10px 10px 10px !important;
-    height: calc(100% - 12px) !important;
+    margin: 5px !important;
+    padding: 6px 8px !important;
+    height: calc(100% - 10px) !important;
     border-width: 1px !important;
   }
 
@@ -4324,79 +4324,52 @@ html, body {
   }
 
   .stamp-series {
-    font-size: 0.68rem !important;
+    font-size: 0.72rem !important;
     font-weight: 600 !important;
     line-height: 1.25 !important;
   }
 
   .stamp-code {
-    font-size: 0.54rem !important;
+    font-size: 0.58rem !important;
   }
 
   .manifesto-title {
-    font-size: 0.88rem !important;
+    font-size: 0.92rem !important;
     margin-bottom: 2px !important;
   }
 
   .manifesto-divider {
-    width: 24px !important;
+    width: 26px !important;
     margin: 2px auto 4px auto !important;
   }
 
   .manifesto-quote {
-    font-size: clamp(0.66rem, 2.15vh, 0.80rem) !important;
-    line-height: 1.35 !important;
-    max-width: 90% !important;
+    font-size: clamp(0.72rem, 2.4vh, 0.88rem) !important;
+    line-height: 1.38 !important;
+    max-width: 92% !important;
     margin: auto 0 !important;
   }
 
   .back-barcode-wrapper {
     margin-top: auto !important;
-    padding-top: 6px !important;
-    padding-bottom: 8px !important;
+    padding-top: 10px !important;
+    padding-bottom: 2px !important;
     gap: 2px !important;
   }
 
   .barcode-lines {
-    width: 90px !important;
-    height: 12px !important;
+    width: 96px !important;
+    height: 14px !important;
   }
 
   .barcode-number {
-    font-size: 0.52rem !important;
+    font-size: 0.56rem !important;
   }
 
   .reopen-book-btn {
     padding: 3px 7px !important;
     font-size: 0.52rem !important;
     margin-top: 2px !important;
-  }
-
-  /* Posición y escala aumentada de los tomos cerrados a la izquierda y en pila */
-  .active-book-wrapper.state-closed-left {
-    transform: translate(calc(-50% - var(--desk-offset-x)), calc(-50% + var(--desk-offset-y))) rotate(-3.5deg) scale(0.84) !important;
-  }
-
-  .tomo-2-book.state-closed-left {
-    /* Tomo 2 a la izquierda: se apila sobre el Tomo 1 sin invadir el centro ni tapar la foto */
-    transform: translate(calc(-50% - var(--desk-offset-x) + 4px), calc(-50% + var(--desk-offset-y) + 6px)) rotate(2deg) scale(0.84) !important;
-    z-index: 26 !important;
-  }
-
-  .tomo-2-book.state-stacked {
-    transform: translate(calc(-50% + var(--desk-offset-x) - 8px), calc(-50% + var(--desk-offset-y) - 4px)) rotate(-2.5deg) scale(0.84) !important;
-  }
-
-  .tomo-2-book.state-stacked.unlocked:hover {
-    transform: translate(calc(-50% + var(--desk-offset-x) - 10px), calc(-50% + var(--desk-offset-y) - 8px)) rotate(-1.5deg) scale(0.86) !important;
-  }
-
-  .tomo-3-book.state-stacked {
-    transform: translate(calc(-50% + var(--desk-offset-x) + 14px), calc(-50% + var(--desk-offset-y) + 12px)) rotate(0deg) scale(0.84) !important;
-  }
-
-  .tomo-3-book.state-stacked.unlocked:hover {
-    transform: translate(calc(-50% + var(--desk-offset-x) + 14px), calc(-50% + var(--desk-offset-y) + 6px)) rotate(0deg) scale(0.86) !important;
   }
 
   /* Animación de la foto física volando al interior del Tomo III en celular horizontal */
@@ -4413,32 +4386,28 @@ html, body {
     }
     35% {
       /* Vuela sobre el Tomo 3 haciendo contacto exacto con su borde superior */
-      transform: translate(calc(-50% + var(--desk-offset-x) + 14px), calc(-50% + var(--desk-offset-y) + 12px - (var(--book-h) * 0.42) - 46px)) scale(0.50) rotate(0deg);
+      transform: translate(calc(-50% + var(--desk-offset-x) + 20px), calc(-50% + var(--desk-offset-y) + 16px - (var(--book-h) * 0.38) - 44px)) scale(0.48) rotate(0deg);
       opacity: 1;
       clip-path: inset(0 0 0 0);
     }
     68% {
       /* Desciende ingresando al Tomo 3; se recorta con precisión matemática en la línea de su borde superior */
-      transform: translate(calc(-50% + var(--desk-offset-x) + 14px), calc(-50% + var(--desk-offset-y) + 12px - (var(--book-h) * 0.42))) scale(0.50) rotate(0deg);
+      transform: translate(calc(-50% + var(--desk-offset-x) + 20px), calc(-50% + var(--desk-offset-y) + 16px - (var(--book-h) * 0.38))) scale(0.48) rotate(0deg);
       opacity: 0.95;
       clip-path: inset(0 0 50% 0);
     }
     100% {
       /* Deslizada completamente adentro del libro entre sus páginas */
-      transform: translate(calc(-50% + var(--desk-offset-x) + 14px), calc(-50% + var(--desk-offset-y) + 12px - (var(--book-h) * 0.42) + 46px)) scale(0.50) rotate(0deg);
+      transform: translate(calc(-50% + var(--desk-offset-x) + 20px), calc(-50% + var(--desk-offset-y) + 16px - (var(--book-h) * 0.38) + 44px)) scale(0.48) rotate(0deg);
       opacity: 0;
       clip-path: inset(0 0 100% 0);
     }
   }
 
   /* Fotografías sobre la mesa (Despegada y Revelada) */
-  .detached-photo-stage {
-    z-index: 35 !important; /* Siempre sobre los tomos cerrados de la izquierda */
-  }
-
   .detached-photo-card {
-    width: min(220px, 28vw) !important;
-    max-width: 30vw !important;
+    width: min(230px, 30vw) !important;
+    max-width: 32vw !important;
     aspect-ratio: 16 / 9 !important;
     padding: 4px !important;
     border-radius: 4px !important;
