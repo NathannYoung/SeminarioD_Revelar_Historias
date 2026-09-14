@@ -266,6 +266,15 @@ window.Tomo3 = (function() {
       return;
     }
 
+    // Tomo 3 solo es accesible cada vez que se crea y guarda una nueva foto
+    if (window.AppDesk.isPhotoPendingSave || !window.AppDesk.isTomo3Unlocked) {
+      if (tomo3Wrapper) {
+        tomo3Wrapper.classList.add('tomo-shake');
+        setTimeout(() => tomo3Wrapper.classList.remove('tomo-shake'), 420);
+      }
+      return;
+    }
+
     if (window.AppDesk.tomo1State === STATES.OPEN) window.Tomo1.closeToLeft();
     if (window.AppDesk.tomo2State === STATES.OPEN) window.Tomo2.closeToLeft();
 
@@ -312,9 +321,8 @@ window.Tomo3 = (function() {
           tomo3Wrapper.classList.remove('closed-at-center');
           setTimeout(() => {
             isTransitioning = false;
-            if (window.AppDesk.isTomo3Unlocked && tomo3Wrapper) {
-              tomo3Wrapper.classList.add('pulse-glow');
-            }
+            // Tomo 3 solo es accesible cada vez que se crea y guarda una nueva foto
+            lock();
           }, 460);
         });
       }, 420);
@@ -322,9 +330,7 @@ window.Tomo3 = (function() {
     }
     setState(STATES.STACKED);
     spreadIndex = 0;
-    if (window.AppDesk.isTomo3Unlocked && tomo3Wrapper) {
-      tomo3Wrapper.classList.add('pulse-glow');
-    }
+    lock();
   }
 
   function closeToLeft() {
@@ -400,10 +406,6 @@ window.Tomo3 = (function() {
 
     savedPhotos = Array.from(photoMap.values());
     persistPhotos();
-
-    if (savedPhotos.length > 0) {
-      unlock();
-    }
 
     if (window.AppDesk.tomo3State === window.AppDesk.STATES.OPEN) {
       renderSpread(spreadIndex);
@@ -488,20 +490,15 @@ window.Tomo3 = (function() {
 
     function handleStackedClick(e) {
       if (e) e.stopPropagation();
-      if (window.AppDesk.isPhotoPendingSave) return;
-      if (window.AppDesk.tomo3State !== window.AppDesk.STATES.STACKED) return;
-
-      if (!window.AppDesk.isTomo3Unlocked) {
-        if (savedPhotos.length > 0) {
-          unlock();
-        } else {
-          if (tomo3Wrapper) {
-            tomo3Wrapper.classList.add('tomo-shake');
-            setTimeout(() => tomo3Wrapper.classList.remove('tomo-shake'), 420);
-          }
-          return;
+      // Si la foto aún no se guardó o Tomo 3 no está desbloqueado, sacudir y no permitir abrir
+      if (window.AppDesk.isPhotoPendingSave || !window.AppDesk.isTomo3Unlocked) {
+        if (tomo3Wrapper) {
+          tomo3Wrapper.classList.add('tomo-shake');
+          setTimeout(() => tomo3Wrapper.classList.remove('tomo-shake'), 420);
         }
+        return;
       }
+      if (window.AppDesk.tomo3State !== window.AppDesk.STATES.STACKED) return;
 
       open(0);
     }
@@ -525,7 +522,13 @@ window.Tomo3 = (function() {
     if (tomo3BackCover) {
       tomo3BackCover.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (window.AppDesk.isPhotoPendingSave) return;
+        if (window.AppDesk.isPhotoPendingSave || !window.AppDesk.isTomo3Unlocked) {
+          if (tomo3Wrapper) {
+            tomo3Wrapper.classList.add('tomo-shake');
+            setTimeout(() => tomo3Wrapper.classList.remove('tomo-shake'), 420);
+          }
+          return;
+        }
         if (window.AppDesk.tomo3State === window.AppDesk.STATES.CLOSED_LEFT) {
           open(spreadIndex || 0);
         }
@@ -550,6 +553,8 @@ window.Tomo3 = (function() {
     });
 
     renderSpread(0);
+    // Tomo 3 comienza bloqueado: solo es accesible al crear y guardar una nueva foto
+    lock();
   }
 
   return {

@@ -206,6 +206,7 @@ window.Camara = (function() {
 
   let currentCapturedPhotoDataUrl = '';
   let currentCapturedSnapshot = null;
+  let isPhotoFirstClick = true;
 
   function unlockMechanics() {
     window.AppDesk.isCameraUnlocked = true;
@@ -684,8 +685,13 @@ window.Camara = (function() {
         droppedPhotoImg.src = dataUrl;
       }
 
+      isPhotoFirstClick = true;
       if (droppedPhotoFlipper) {
         droppedPhotoFlipper.classList.remove('flipped');
+      }
+      const frontEl = document.getElementById('droppedPhotoFront');
+      if (frontEl) {
+        frontEl.setAttribute('title', 'Haz clic en la foto para ver el reverso');
       }
       if (photoTitleInput) {
         photoTitleInput.value = '';
@@ -942,61 +948,86 @@ window.Camara = (function() {
       }
     });
 
-    // Agrandar la fotografía haciendo clic en el anverso (sin botones adicionales)
+    // Ciclo interactivo de la fotografía revelada en la mesa:
+    // 1. Primer clic sobre la foto: la gira y muestra el reverso.
+    // 2. Clic en los campos del reverso: permite tipear sin girar.
+    // 3. Clic fuera de los campos o fuera de la foto: la gira al anverso.
+    // 4. Siguientes clics sobre la foto: la agranda (zoom).
+    // 5. Clic fuera de la foto: quita el zoom y la gira nuevamente al reverso.
     const droppedPhotoFrontEl = document.getElementById('droppedPhotoFront');
     const droppedPhotoBackEl = document.getElementById('droppedPhotoBack');
+    const droppedPhotoBackdropEl = document.getElementById('droppedPhotoBackdrop');
 
+    function handlePhotoClickOutside() {
+      if (!window.AppDesk.isPhotoPendingSave) return;
+      if (!droppedPhotoStage || !droppedPhotoStage.classList.contains('active')) return;
+
+      const isZoomed = droppedPhotoStage.classList.contains('zoomed');
+
+      if (isZoomed) {
+        // "si vuelvo a ahcer click fuera se da vuelta y veo nuevamente el reverso"
+        droppedPhotoStage.classList.remove('zoomed');
+        if (droppedPhotoFlipper) {
+          droppedPhotoFlipper.classList.add('flipped');
+        }
+      } else {
+        // "los siguientes click fuera de la foto la giro"
+        isPhotoFirstClick = false;
+        if (droppedPhotoFlipper) {
+          droppedPhotoFlipper.classList.toggle('flipped');
+        }
+      }
+    }
+
+    // Clic sobre la foto (anverso)
     if (droppedPhotoFrontEl) {
       droppedPhotoFrontEl.addEventListener('click', (e) => {
         e.stopPropagation();
         if (!droppedPhotoStage) return;
 
-        // Si la foto aún no está agrandada, el clic la agranda
-        if (!droppedPhotoStage.classList.contains('zoomed')) {
-          droppedPhotoStage.classList.add('zoomed');
-        } else {
-          // Si ya está agrandada, el clic en el anverso la da vuelta hacia la ficha
+        if (isPhotoFirstClick) {
+          // "cuando saco la foto y le hago click lo primero que haga es darse vuelta y ver el reverso"
+          isPhotoFirstClick = false;
           if (droppedPhotoFlipper) {
             droppedPhotoFlipper.classList.add('flipped');
           }
+          droppedPhotoFrontEl.setAttribute('title', 'Haz clic para agrandar la foto');
+        } else {
+          // "pero si el click es sobre la foto la agrando"
+          droppedPhotoStage.classList.toggle('zoomed');
         }
       });
     }
 
+    // Clic sobre la ficha (reverso)
     if (droppedPhotoBackEl) {
       droppedPhotoBackEl.addEventListener('click', (e) => {
-        // Si el usuario hace clic en inputs o botón guardar: no girar
+        // "click sobre los campos me deja tipear"
         if (e.target.closest('input, textarea, select, button, label, .card-input-group')) {
           return;
         }
         e.stopPropagation();
-        // Clic en el reverso (fuera de los campos) vuelve al anverso fotográfico
+        // "pero si no hago click en los campos y hago en cualqueir otro ahi si se gira y veo el anvverso nuevamente"
         if (droppedPhotoFlipper) {
           droppedPhotoFlipper.classList.remove('flipped');
         }
       });
     }
 
-    // Clic en el fondo atenuado de la mesa reduce la foto si está agrandada
-    const droppedPhotoBackdropEl = document.getElementById('droppedPhotoBackdrop');
+    // Clic fuera de la foto (en el fondo oscuro protector)
     if (droppedPhotoBackdropEl) {
       droppedPhotoBackdropEl.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (droppedPhotoStage && droppedPhotoStage.classList.contains('zoomed')) {
-          droppedPhotoStage.classList.remove('zoomed');
-        }
+        handlePhotoClickOutside();
       });
     }
 
-    // Doble toque / doble clic en la tarjeta alterna el modo agrandado
-    if (droppedPhotoCard) {
-      droppedPhotoCard.addEventListener('dblclick', (e) => {
-        if (e.target.closest('input, textarea, select, button')) return;
-        if (droppedPhotoStage) {
-          droppedPhotoStage.classList.toggle('zoomed');
-        }
-      });
-    }
+    // Clic en cualquier parte exterior fuera de la tarjeta
+    window.addEventListener('click', (e) => {
+      if (!window.AppDesk.isPhotoPendingSave) return;
+      if (e.target.closest('#droppedPhotoCard')) return;
+      handlePhotoClickOutside();
+    });
 
     // Asegurar que interactuar con los campos de texto no cause giros involuntarios
     [photoTitleInput, photoAuthorInput, photoObservationsInput].forEach((fieldEl) => {
